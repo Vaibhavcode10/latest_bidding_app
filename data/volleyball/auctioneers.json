@@ -1,0 +1,38 @@
+[
+  {
+    "id": "vb_a1",
+    "username": "emma_watson",
+    "email": "emma.watson@volleyball.com",
+    "password": "password123",
+    "name": "Emma Watson",
+    "phone": "+1-555-0401",
+    "sport": "volleyball",
+    "profilePicture": "https://via.placeholder.com/150?text=EW",
+    "createdAt": "2023-01-15",
+    "active": true
+  },
+  {
+    "id": "vb_a2",
+    "username": "thomas_reid",
+    "email": "thomas.reid@volleyball.com",
+    "password": "password123",
+    "name": "Thomas Reid",
+    "phone": "+1-555-0402",
+    "sport": "volleyball",
+    "profilePicture": "https://via.placeholder.com/150?text=TR",
+    "createdAt": "2023-02-20",
+    "active": true
+  },
+  {
+    "id": "vb_a3",
+    "username": "olivia_martin",
+    "email": "olivia.martin@volleyball.com",
+    "password": "password123",
+    "name": "Olivia Martin",
+    "phone": "+1-555-0403",
+    "sport": "volleyball",
+    "profilePicture": "https://via.placeholder.com/150?text=OM",
+    "createdAt": "2023-03-10",
+    "active": true
+  }
+]

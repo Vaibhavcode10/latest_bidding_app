@@ -1,0 +1,38 @@
+[
+  {
+    "id": "c_a1",
+    "username": "rajesh_kumar",
+    "email": "rajesh.kumar@cricket.com",
+    "password": "password123",
+    "name": "Rajesh Kumar",
+    "phone": "+91-98765-43210",
+    "sport": "cricket",
+    "profilePicture": "https://via.placeholder.com/150?text=RK",
+    "createdAt": "2023-01-15",
+    "active": true
+  },
+  {
+    "id": "c_a2",
+    "username": "priya_sharma",
+    "email": "priya.sharma@cricket.com",
+    "password": "password123",
+    "name": "Priya Sharma",
+    "phone": "+91-98765-43211",
+    "sport": "cricket",
+    "profilePicture": "https://via.placeholder.com/150?text=PS",
+    "createdAt": "2023-02-20",
+    "active": true
+  },
+  {
+    "id": "c_a3",
+    "username": "vikram_patel",
+    "email": "vikram.patel@cricket.com",
+    "password": "password123",
+    "name": "Vikram Patel",
+    "phone": "+91-98765-43212",
+    "sport": "cricket",
+    "profilePicture": "https://via.placeholder.com/150?text=VP",
+    "createdAt": "2023-03-10",
+    "active": true
+  }
+]

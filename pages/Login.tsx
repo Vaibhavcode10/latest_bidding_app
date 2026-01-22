@@ -9,23 +9,39 @@ const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
+  const [selectedSport, setSelectedSport] = useState('football');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    login(username, password, selectedRole);
-    
-    if (selectedRole === 'admin') {
-      navigate('/teams');
-    } else {
-      navigate('/player/select-sport');
-    }
-  };
+  const sports = ['football', 'basketball', 'cricket', 'baseball', 'volleyball'];
 
   const roles: { id: UserRole; label: string; description: string; icon: string }[] = [
     { id: 'admin', label: 'Admin', description: 'Manage auctions and teams', icon: '⚙️' },
     { id: 'player', label: 'Player', description: 'Manage your profile & view auctions', icon: '👤' },
-    { id: 'auctioneer', label: 'Auctioneer', description: 'Conduct auctions', icon: '🎙️' },
+    { id: 'auctioneer', label: 'Auctioneer', description: 'Conduct auctions & manage franchise', icon: '🎙️' },
   ];
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await login(username, password, selectedRole, selectedRole === 'auctioneer' ? selectedSport : undefined);
+      
+      if (selectedRole === 'admin') {
+        navigate('/teams');
+      } else if (selectedRole === 'player') {
+        navigate('/player/select-sport');
+      } else if (selectedRole === 'auctioneer') {
+        navigate('/auctioneer/dashboard');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
@@ -45,12 +61,21 @@ const Login: React.FC = () => {
         <h2 className="text-3xl font-black text-center mb-2 tracking-tight">Sports Auction</h2>
         <p className="text-slate-500 text-center mb-8 text-sm">Select your role and login</p>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-600/20 border border-red-600/30 rounded-lg">
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Role Selection */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {roles.map((role) => (
             <button
               key={role.id}
-              onClick={() => setSelectedRole(role.id)}
+              onClick={() => {
+                setSelectedRole(role.id);
+                setError('');
+              }}
               className={`p-4 rounded-xl border-2 transition-all ${
                 selectedRole === role.id
                   ? 'border-blue-500 bg-blue-600/10'
@@ -64,13 +89,35 @@ const Login: React.FC = () => {
           ))}
         </div>
 
+        {/* Sport Selection for Auctioneer */}
+        {selectedRole === 'auctioneer' && (
+          <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700 rounded-xl">
+            <label className="block text-sm font-bold text-slate-300 uppercase tracking-widest ml-1 mb-3">Select Sport</label>
+            <div className="grid grid-cols-5 gap-2">
+              {sports.map((sport) => (
+                <button
+                  key={sport}
+                  onClick={() => setSelectedSport(sport)}
+                  className={`py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
+                    selectedSport === sport
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  }`}
+                >
+                  {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Username</label>
             <input 
               type="text" 
               className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white placeholder:text-slate-600"
-              placeholder="Enter username..."
+              placeholder={selectedRole === 'auctioneer' ? 'e.g., james_mitchell' : 'Enter username...'}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -89,11 +136,20 @@ const Login: React.FC = () => {
           </div>
           <button 
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/30 hover:shadow-blue-600/20 active:scale-[0.98]"
+            disabled={isLoading}
+            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/30 hover:shadow-blue-600/20 active:scale-[0.98]"
           >
-            Login
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        {selectedRole === 'auctioneer' && (
+          <div className="mt-4 p-3 bg-blue-600/10 border border-blue-600/20 rounded-lg">
+            <p className="text-blue-300 text-xs">
+              <span className="font-bold">Demo Credentials:</span> Try logging in with username 'james_mitchell' and password 'password123'
+            </p>
+          </div>
+        )}
         
         <button 
           onClick={() => navigate('/')}

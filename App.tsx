@@ -8,12 +8,16 @@ import TeamSelection from './pages/TeamSelection';
 import PlayerSelectSport from './pages/PlayerSelectSport';
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import PlayerDashboardLayout from './pages/dashboard/PlayerDashboardLayout';
+import AuctioneerDashboardLayout from './pages/dashboard/AuctioneerDashboardLayout';
 import Overview from './pages/dashboard/Overview';
 import Players from './pages/dashboard/Players';
 import Teams from './pages/dashboard/Teams';
 import PlayerProfilePage from './pages/dashboard/PlayerProfile';
 import BidEvents from './pages/dashboard/BidEvents';
 import AuctionRequests from './pages/dashboard/AuctionRequests';
+import AuctioneerOverview from './pages/dashboard/AuctioneerOverview';
+import AuctioneerTeamDetails from './pages/dashboard/AuctioneerTeamDetails';
+import AuctioneerPlayers from './pages/dashboard/AuctioneerPlayers';
 
 const App: React.FC = () => {
   return (
@@ -30,6 +34,13 @@ const App: React.FC = () => {
             <Route path="/player/dashboard" element={<PlayerDashboardLayout />}>
               <Route index element={<PlayerProfilePage />} />
               <Route path="bid-events" element={<BidEvents />} />
+            </Route>
+
+            {/* Auctioneer Routes */}
+            <Route path="/auctioneer/dashboard" element={<AuctioneerDashboardLayout />}>
+              <Route index element={<AuctioneerOverview />} />
+              <Route path="team" element={<AuctioneerTeamDetails />} />
+              <Route path="players" element={<AuctioneerPlayers />} />
             </Route>
 
             {/* Admin Routes */}
