@@ -1,0 +1,28 @@
+[
+  {
+    "id": "bk_t1",
+    "name": "Golden State Warriors",
+    "sport": "basketball",
+    "owner": "Joe Lacob",
+    "purseRemaining": 15000000,
+    "totalPurse": 15000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgPointsPerGame": 0
+  },
+  {
+    "id": "bk_t2",
+    "name": "Boston Celtics",
+    "sport": "basketball",
+    "owner": "Wyc Grousbeck",
+    "purseRemaining": 15000000,
+    "totalPurse": 15000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgPointsPerGame": 0
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "vb_t1",
+    "name": "Pune Pioneers",
+    "sport": "volleyball",
+    "owner": "Arun Reddy",
+    "purseRemaining": 8000000,
+    "totalPurse": 8000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgPointsPerMatch": 0
+  },
+  {
+    "id": "vb_t2",
+    "name": "Bangalore Blitzers",
+    "sport": "volleyball",
+    "owner": "Meera Sharma",
+    "purseRemaining": 8000000,
+    "totalPurse": 8000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgPointsPerMatch": 0
+  }
+]

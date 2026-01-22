@@ -1,0 +1,56 @@
+[
+  {
+    "id": "vb_p1",
+    "name": "Neeraj Chopra",
+    "sport": "volleyball",
+    "role": "Spiker",
+    "basePrice": 1200000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 156,
+      "totalPoints": 2450,
+      "avgPointsPerMatch": 15.7,
+      "blocksPerMatch": 2.1,
+      "assistsPerMatch": 1.2
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "vb_p2",
+    "name": "Ankita Kumari",
+    "sport": "volleyball",
+    "role": "Setter",
+    "basePrice": 1000000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 145,
+      "totalPoints": 1800,
+      "avgPointsPerMatch": 12.4,
+      "blocksPerMatch": 0.8,
+      "assistsPerMatch": 8.5
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "vb_p3",
+    "name": "Rajesh Verma",
+    "sport": "volleyball",
+    "role": "Libero",
+    "basePrice": 800000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 167,
+      "totalPoints": 950,
+      "avgPointsPerMatch": 5.7,
+      "blocksPerMatch": 1.2,
+      "assistsPerMatch": 0.5
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  }
+]

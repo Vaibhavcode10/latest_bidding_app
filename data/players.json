@@ -1,0 +1,9 @@
+[
+  {
+    "id": "p1",
+    "name": "Lionel Messi",
+    "role": "Forward",
+    "basePrice": 10000000,
+    "status": "UNSOLD"
+  }
+]

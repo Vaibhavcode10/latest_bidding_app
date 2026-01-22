@@ -1,0 +1,28 @@
+[
+  {
+    "id": "t1",
+    "name": "Madrid Stars",
+    "sport": "football",
+    "owner": "Carlo Ancelotti",
+    "purseRemaining": 50000000,
+    "totalPurse": 50000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgScoreRuns": 0
+  },
+  {
+    "id": "t2",
+    "name": "Barcelona Blues",
+    "sport": "football",
+    "owner": "Luis Enrique",
+    "purseRemaining": 50000000,
+    "totalPurse": 50000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgScoreRuns": 0
+  }
+]

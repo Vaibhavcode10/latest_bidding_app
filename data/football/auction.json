@@ -1,0 +1,10 @@
+
+{
+  "id": "auc-1",
+  "sport": "football",
+  "name": "Elite Football Auction 2025",
+  "date": "2025-06-01",
+  "status": "SCHEDULED",
+  "bidIncrement": 500000,
+  "teamIds": ["t1", "t2"]
+}

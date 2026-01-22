@@ -1,0 +1,5 @@
+{
+  "name": "Sports Auction App Skeleton",
+  "description": "Initial project skeleton and data contracts for a high-performance sports auction application using React, TypeScript, and a local JSON-based file store.",
+  "requestFramePermissions": []
+}

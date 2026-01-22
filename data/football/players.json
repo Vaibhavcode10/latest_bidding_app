@@ -1,0 +1,67 @@
+[
+  {
+    "id": "p1",
+    "name": "Lionel Messi",
+    "sport": "football",
+    "role": "Forward",
+    "basePrice": 10000000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 900,
+      "goals": 800,
+      "assists": 300,
+      "avgGoalsPerMatch": 0.89,
+      "trophies": 45
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "p2",
+    "name": "Cristiano Ronaldo",
+    "sport": "football",
+    "role": "Forward",
+    "basePrice": 9500000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 920,
+      "goals": 850,
+      "assists": 250,
+      "avgGoalsPerMatch": 0.92,
+      "trophies": 40
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "p3",
+    "name": "Erling Haaland",
+    "sport": "football",
+    "role": "Forward",
+    "basePrice": 8000000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 180,
+      "goals": 250,
+      "assists": 60,
+      "avgGoalsPerMatch": 1.39,
+      "trophies": 8
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "name": "saurabh",
+    "role": "forward",
+    "basePrice": 11,
+    "id": "fo_p1769074306880",
+    "sport": "football",
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "auctionPrice": null,
+    "soldTo": null
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cr_t1",
+    "name": "Mumbai Mystics",
+    "sport": "cricket",
+    "owner": "Raj Patel",
+    "purseRemaining": 10000000,
+    "totalPurse": 10000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgScoreRuns": 0
+  },
+  {
+    "id": "cr_t2",
+    "name": "Delhi Dragons",
+    "sport": "cricket",
+    "owner": "Priya Singh",
+    "purseRemaining": 10000000,
+    "totalPurse": 10000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "avgScoreRuns": 0
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cr_p1",
+    "name": "Virat Kohli",
+    "sport": "cricket",
+    "role": "Batsman",
+    "basePrice": 2000000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 183,
+      "runs": 12000,
+      "avgRuns": 45.2,
+      "wickets": 0,
+      "avgStrike": 95.5
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "cr_p2",
+    "name": "Jasprit Bumrah",
+    "sport": "cricket",
+    "role": "Bowler",
+    "basePrice": 1500000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 87,
+      "runs": 0,
+      "avgRuns": 0,
+      "wickets": 156,
+      "avgEconomyRate": 6.8
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "cr_p3",
+    "name": "Rohit Sharma",
+    "sport": "cricket",
+    "role": "Batsman",
+    "basePrice": 1800000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "matches": 159,
+      "runs": 10500,
+      "avgRuns": 42.1,
+      "wickets": 0,
+      "avgStrike": 93.2
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  }
+]

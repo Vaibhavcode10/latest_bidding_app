@@ -1,0 +1,56 @@
+[
+  {
+    "id": "bb_p1",
+    "name": "Aaron Johnson",
+    "sport": "baseball",
+    "role": "Pitcher",
+    "basePrice": 1500000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "games": 200,
+      "strikeouts": 1850,
+      "ERA": 3.45,
+      "wins": 125,
+      "losses": 75
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "bb_p2",
+    "name": "Mike Davis",
+    "sport": "baseball",
+    "role": "Outfielder",
+    "basePrice": 1800000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "games": 189,
+      "hits": 425,
+      "homeRuns": 95,
+      "battingAverage": 0.298,
+      "runsScored": 245
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  },
+  {
+    "id": "bb_p3",
+    "name": "Carlos Rodriguez",
+    "sport": "baseball",
+    "role": "Catcher",
+    "basePrice": 1300000,
+    "currentBid": 0,
+    "status": "AVAILABLE",
+    "careerRecords": {
+      "games": 156,
+      "hits": 312,
+      "homeRuns": 48,
+      "battingAverage": 0.276,
+      "runsScored": 189
+    },
+    "auctionPrice": null,
+    "soldTo": null
+  }
+]
