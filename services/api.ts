@@ -1,9 +1,9 @@
-const API_BASE = 'http://localhost:4000/api';
+import { getApiUrl, getApiBase } from '../config/index.js';
 
 export const api = {
   get: async <T>(entity: 'players' | 'teams', sport?: string): Promise<T[]> => {
     try {
-      const url = sport ? `${API_BASE}/${entity}/${sport}` : `${API_BASE}/${entity}`;
+      const url = getApiUrl(entity, sport);
       const res = await fetch(url);
       if (!res.ok) throw new Error('Fetch failed');
       return res.json();
@@ -15,7 +15,7 @@ export const api = {
 
   create: async <T>(entity: 'players' | 'teams', data: Partial<T>, sport?: string): Promise<T | null> => {
     try {
-      const url = sport ? `${API_BASE}/${entity}/${sport}` : `${API_BASE}/${entity}`;
+      const url = getApiUrl(entity, sport);
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +31,9 @@ export const api = {
 
   update: async <T>(entity: 'players' | 'teams', id: string, data: Partial<T>, sport?: string): Promise<boolean> => {
     try {
-      const url = sport ? `${API_BASE}/${entity}/${sport}/${id}` : `${API_BASE}/${entity}/${id}`;
+      const baseUrl = getApiBase();
+      const entityPath = entity === 'teams' ? 'teams' : entity;
+      const url = sport ? `${baseUrl}/${entityPath}/${sport}/${id}` : `${baseUrl}/${entityPath}/${id}`;
       const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +48,9 @@ export const api = {
 
   delete: async (entity: 'players' | 'teams', id: string, sport?: string): Promise<boolean> => {
     try {
-      const url = sport ? `${API_BASE}/${entity}/${sport}/${id}` : `${API_BASE}/${entity}/${id}`;
+      const baseUrl = getApiBase();
+      const entityPath = entity === 'teams' ? 'teams' : entity;
+      const url = sport ? `${baseUrl}/${entityPath}/${sport}/${id}` : `${baseUrl}/${entityPath}/${id}`;
       const res = await fetch(url, {
         method: 'DELETE',
       });

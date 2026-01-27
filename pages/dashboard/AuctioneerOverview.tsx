@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { getApiBase } from '../../config/index.js';
 
 const AuctioneerOverview: React.FC = () => {
   const { user, franchise } = useAuth();
@@ -32,7 +33,8 @@ const AuctioneerOverview: React.FC = () => {
     if (!franchise || !user) return;
     
     try {
-      const response = await fetch('http://localhost:4000/api/auctioneers/franchise/update', {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auctioneers/franchise/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +78,8 @@ const AuctioneerOverview: React.FC = () => {
     if (!user) return;
 
     try {
-      const response = await fetch('http://localhost:4000/api/auctioneers/franchise/create', {
+      const apiBase = getApiBase();
+      const response = await fetch(`${apiBase}/auctioneers/franchise/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,10 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
 
 // Helper function to load auctioneer data for a specific sport
 const loadAuctioneers = (sport) => {
   try {
-    const filePath = path.join(__dirname, `../data/${sport}/auctioneers.json`);
+    const filePath = `data/${sport}/auctioneers.json`;
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
@@ -16,7 +15,7 @@ const loadAuctioneers = (sport) => {
 // Helper function to load franchise data for a specific sport
 const loadFranchises = (sport) => {
   try {
-    const filePath = path.join(__dirname, `../data/${sport}/franchises.json`);
+    const filePath = `data/${sport}/franchises.json`;
     const data = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
@@ -170,7 +169,7 @@ const createFranchise = (req, res) => {
 
   // Write back to file
   try {
-    const filePath = path.join(__dirname, `../data/${sport}/franchises.json`);
+    const filePath = `data/${sport}/franchises.json`;
     fs.writeFileSync(filePath, JSON.stringify(franchises, null, 2));
 
     res.status(201).json({
@@ -217,7 +216,7 @@ const updateFranchise = (req, res) => {
 
   // Write back to file
   try {
-    const filePath = path.join(__dirname, `../data/${sport}/franchises.json`);
+    const filePath = `data/${sport}/franchises.json`;
     fs.writeFileSync(filePath, JSON.stringify(franchises, null, 2));
 
     res.status(200).json({
@@ -234,7 +233,7 @@ const updateFranchise = (req, res) => {
   }
 };
 
-module.exports = {
+export {
   login,
   getAuctioneerDetails,
   createFranchise,

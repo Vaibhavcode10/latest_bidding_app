@@ -1,1 +1,40 @@
-[]
+[
+  {
+    "id": "vb_f1",
+    "name": "Pune Pioneers",
+    "auctioneerId": "vb_a1",
+    "auctioneerName": "Arun Reddy",
+    "sport": "volleyball",
+    "city": "Pune",
+    "stadium": "Shree Shiv Chhatrapati Sports Complex",
+    "capacity": 15000,
+    "founded": "2016",
+    "totalPurse": 8000000,
+    "purseRemaining": 8000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "description": "Pune's pioneering volleyball franchise",
+    "createdAt": "2023-01-15"
+  },
+  {
+    "id": "vb_f2",
+    "name": "Bangalore Blitzers",
+    "auctioneerId": "vb_a2",
+    "auctioneerName": "Meera Sharma",
+    "sport": "volleyball",
+    "city": "Bangalore",
+    "stadium": "Kanteerava Indoor Stadium",
+    "capacity": 4000,
+    "founded": "2017",
+    "totalPurse": 8000000,
+    "purseRemaining": 8000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "description": "Bangalore's dynamic volleyball team",
+    "createdAt": "2023-01-20"
+  }
+]

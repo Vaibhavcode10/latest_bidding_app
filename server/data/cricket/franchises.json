@@ -1,7 +1,7 @@
 [
   {
     "id": "cr_f1",
-    "name": "  Mystics",
+    "name": "Mumbai Mystics",
     "auctioneerId": "cr_a1",
     "auctioneerName": "Raj Patel",
     "sport": "cricket",
@@ -17,6 +17,26 @@
     "losses": 0,
     "description": "Mumbai's premier cricket franchise",
     "createdAt": "2023-01-15"
+  },
+  {
+    "name": "csk",
+    "owner": "rajesh_kumar",
+    "totalPurse": 10000000,
+    "purseRemaining": 10000000,
+    "id": "cr_t1769135965810",
+    "sport": "cricket",
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "auctioneerId": "cr_a1",
+    "auctioneerName": "rajesh_kumar",
+    "city": "Chennai",
+    "stadium": "M. A. Chidambaram Stadium",
+    "capacity": 50000,
+    "founded": "2008",
+    "description": "Chennai's beloved cricket franchise",
+    "createdAt": "2024-01-22"
   },
   {
     "id": "cr_f2",
@@ -36,17 +56,5 @@
     "losses": 0,
     "description": "Delhi's fierce cricket team",
     "createdAt": "2023-01-20"
-  },
-  {
-    "name": "csk",
-    "owner": "dhoni",
-    "totalPurse": 10000000,
-    "purseRemaining": 10000000,
-    "id": "cr_t1769393340238",
-    "sport": "cricket",
-    "playerIds": [],
-    "playerCount": 0,
-    "wins": 0,
-    "losses": 0
   }
 ]

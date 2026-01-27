@@ -2,10 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import playersRouter from './routes/players.js';
 import teamsRouter from './routes/teams.js';
+import authRouter from './routes/auth.js';
 import * as auctioneersRouter from './routes/auctioneers.js';
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(express.json());
 // Routes
 app.use('/api/players', playersRouter);
 app.use('/api/teams', teamsRouter);
+app.use('/api/auth', authRouter);
 
 // Auctioneer routes
 app.post('/api/auctioneers/login', (req, res) => {

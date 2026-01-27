@@ -1,1 +1,40 @@
-[]
+[
+  {
+    "id": "bk_f1",
+    "name": "Golden State Warriors",
+    "auctioneerId": "bk_a1",
+    "auctioneerName": "Joe Lacob",
+    "sport": "basketball",
+    "city": "San Francisco",
+    "stadium": "Chase Center",
+    "capacity": 18064,
+    "founded": "1946",
+    "totalPurse": 15000000,
+    "purseRemaining": 15000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "description": "Golden State's championship franchise",
+    "createdAt": "2023-01-15"
+  },
+  {
+    "id": "bk_f2",
+    "name": "Boston Celtics",
+    "auctioneerId": "bk_a2",
+    "auctioneerName": "Wyc Grousbeck",
+    "sport": "basketball",
+    "city": "Boston",
+    "stadium": "TD Garden",
+    "capacity": 19156,
+    "founded": "1946",
+    "totalPurse": 15000000,
+    "purseRemaining": 15000000,
+    "playerIds": [],
+    "playerCount": 0,
+    "wins": 0,
+    "losses": 0,
+    "description": "Boston's historic basketball franchise",
+    "createdAt": "2023-01-20"
+  }
+]

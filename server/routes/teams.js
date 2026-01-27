@@ -3,7 +3,7 @@ import { fileStore } from '../fileStore.js';
 
 const router = express.Router();
 
-const getFilePath = (sport) => `data/${sport}/teams.json`;
+const getFilePath = (sport) => `data/${sport}/franchises.json`;
 
 // Get all teams for a sport
 router.get('/:sport', async (req, res) => {
