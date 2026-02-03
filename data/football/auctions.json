@@ -23,29 +23,29 @@
       {
         "id": "fb_team_madrid",
         "name": "Madrid Lions",
-        "logoUrl": "https://via.placeholder.com/100x100/059669/FFFFFF?text=ML",
-        "purseRemaining": 942500000,
+        "logoUrl": "https://ui-avatars.com/api/?name=ML&background=059669&color=FFFFFF&size=100",
+        "purseRemaining": 917500000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_barcelona",
         "name": "Barcelona Eagles",
-        "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFFFFF?text=BE",
-        "purseRemaining": 165000000,
+        "logoUrl": "https://ui-avatars.com/api/?name=BE&background=7C2D12&color=FFFFFF&size=100",
+        "purseRemaining": 100000000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_milan",
         "name": "Milan Thunder",
-        "logoUrl": "https://via.placeholder.com/100x100/1F2937/FFFFFF?text=MT",
-        "purseRemaining": 975000000,
+        "logoUrl": "https://ui-avatars.com/api/?name=MT&background=1F2937&color=FFFFFF&size=100",
+        "purseRemaining": 700000000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_liverpool",
         "name": "Liverpool Reds",
-        "logoUrl": "https://via.placeholder.com/100x100/DC2626/FFFFFF?text=LR",
-        "purseRemaining": 655000000,
+        "logoUrl": "https://ui-avatars.com/api/?name=LR&background=DC2626&color=FFFFFF&size=100",
+        "purseRemaining": 482500000,
         "totalPurse": 1000000000
       }
     ],
@@ -84,7 +84,7 @@
     },
     "liveSessionStartedAt": "2026-01-29T05:13:31.953Z",
     "liveSessionStartedBy": "auc-football-001",
-    "updatedAt": "2026-01-29T07:25:15.202Z"
+    "updatedAt": "2026-02-03T08:20:37.161Z"
   },
   {
     "id": "auction_fo_1769669014798",
@@ -110,28 +110,28 @@
       {
         "id": "fb_team_madrid",
         "name": "Madrid Lions",
-        "logoUrl": "https://via.placeholder.com/100x100/059669/FFFFFF?text=ML",
+        "logoUrl": "https://ui-avatars.com/api/?name=ML&background=059669&color=FFFFFF&size=100",
         "purseRemaining": 1000000000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_barcelona",
         "name": "Barcelona Eagles",
-        "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFFFFF?text=BE",
+        "logoUrl": "https://ui-avatars.com/api/?name=BE&background=7C2D12&color=FFFFFF&size=100",
         "purseRemaining": 1000000000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_milan",
         "name": "Milan Thunder",
-        "logoUrl": "https://via.placeholder.com/100x100/1F2937/FFFFFF?text=MT",
+        "logoUrl": "https://ui-avatars.com/api/?name=MT&background=1F2937&color=FFFFFF&size=100",
         "purseRemaining": 1000000000,
         "totalPurse": 1000000000
       },
       {
         "id": "fb_team_liverpool",
         "name": "Liverpool Reds",
-        "logoUrl": "https://via.placeholder.com/100x100/DC2626/FFFFFF?text=LR",
+        "logoUrl": "https://ui-avatars.com/api/?name=LR&background=DC2626&color=FFFFFF&size=100",
         "purseRemaining": 1000000000,
         "totalPurse": 1000000000
       }

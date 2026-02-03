@@ -128,7 +128,7 @@ const TeamSelection: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Team Management System
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Select sport and manage team roster</p>
+              <p className="text-sm text-gray-700 dark:text-gray-400">Select sport and manage team roster</p>
             </div>
           </div>
           <ThemeToggle />
@@ -236,30 +236,30 @@ const TeamSelection: React.FC = () => {
               {teams.map((team) => (
                 <div
                   key={team.id}
-                  className="group bg-white dark:bg-gradient-to-br dark:from-slate-800/50 dark:to-slate-900/50 border border-gray-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500/50 rounded-2xl p-6 hover:shadow-xl dark:hover:shadow-2xl hover:shadow-blue-200 dark:hover:shadow-blue-500/20 transition-all transform hover:scale-105 backdrop-blur-xl shadow-sm"
+                  className="group bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-cyan-900/30 hover:border-blue-400 dark:hover:border-cyan-500/50 rounded-2xl p-6 hover:shadow-xl dark:hover:shadow-cyan-500/10 transition-all transform hover:scale-[1.02] shadow-sm"
                 >
                   {/* Team Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-black text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                      <h3 className="text-xl font-black text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors mb-1">
                         {team.name}
                       </h3>
-                      <p className="text-xs text-gray-600 dark:text-slate-400">Owner: <span className="text-gray-700 dark:text-slate-300 font-semibold">{team.owner}</span></p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Owner: <span className="text-gray-700 dark:text-gray-300 font-semibold">{team.owner}</span></p>
                     </div>
                     <div className="text-2xl opacity-0 group-hover:opacity-100 transition-opacity">{getSportIcon(sport)}</div>
                   </div>
 
                   {/* Stats */}
-                  <div className="space-y-3 mb-6 pb-6 border-b border-gray-200 dark:border-slate-700">
+                  <div className="space-y-3 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700/50">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-slate-400 text-sm">Total Purse</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">Total Purse</span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400">${(team.totalPurse / 1000000).toFixed(1)}M</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-slate-400 text-sm">Remaining</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">Remaining</span>
                       <span className="font-bold text-amber-600 dark:text-amber-400">${(team.purseRemaining / 1000000).toFixed(1)}M</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-slate-700/50 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-2 overflow-hidden">
                       <div
                         className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all"
                         style={{
@@ -268,11 +268,11 @@ const TeamSelection: React.FC = () => {
                       ></div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-slate-400 text-sm">Squad</span>
-                      <span className="font-bold text-blue-600 dark:text-blue-400">{team.playerCount} Players</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">Squad</span>
+                      <span className="font-bold text-blue-600 dark:text-cyan-400">{team.playerCount} Players</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-slate-400 text-sm">Record</span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">Record</span>
                       <span className="font-bold text-purple-600 dark:text-purple-400">{team.wins}W • {team.losses}L</span>
                     </div>
                   </div>
@@ -281,13 +281,13 @@ const TeamSelection: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(team)}
-                      className="flex-1 px-4 py-2 bg-blue-100 dark:bg-blue-600/20 hover:bg-blue-200 dark:hover:bg-blue-600/40 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold transition-all"
+                      className="flex-1 px-4 py-2 bg-blue-100 dark:bg-cyan-500/20 hover:bg-blue-200 dark:hover:bg-cyan-500/30 text-blue-600 dark:text-cyan-400 rounded-lg text-xs font-bold transition-all"
                     >
                       ✎ Edit
                     </button>
                     <button
                       onClick={() => handleDelete(team.id)}
-                      className="flex-1 px-4 py-2 bg-red-100 dark:bg-red-600/20 hover:bg-red-200 dark:hover:bg-red-600/40 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-all"
+                      className="flex-1 px-4 py-2 bg-red-100 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-all"
                     >
                       🗑 Delete
                     </button>
@@ -299,8 +299,8 @@ const TeamSelection: React.FC = () => {
             {teams.length === 0 && (
               <div className="text-center py-16">
                 <div className="text-5xl mb-4">🏟️</div>
-                <p className="text-gray-600 dark:text-slate-400 text-lg font-semibold">No teams found for {sport}</p>
-                <p className="text-gray-500 dark:text-slate-500 text-sm mt-2">Create one to get started with the auction!</p>
+                <p className="text-gray-600 dark:text-gray-400 text-lg font-semibold">No teams found for {sport}</p>
+                <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Create one to get started with the auction!</p>
               </div>
             )}
           </div>

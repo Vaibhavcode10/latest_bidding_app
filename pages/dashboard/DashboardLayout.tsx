@@ -122,7 +122,7 @@ const DashboardLayout: React.FC = () => {
                 `flex items-center px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
                   isActive 
                     ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 shadow-sm' 
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
+                    : 'text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
                 } ${sidebarCollapsed ? 'justify-center' : ''}`
               }
               title={sidebarCollapsed ? item.name : ''}
@@ -177,7 +177,7 @@ const DashboardLayout: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Auction Management System
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Sports bidding and team management</p>
+            <p className="text-sm text-gray-700 dark:text-gray-400">Sports bidding and team management</p>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />

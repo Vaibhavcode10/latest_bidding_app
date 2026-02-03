@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const AuctioneerDashboardLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -130,6 +131,7 @@ const AuctioneerDashboardLayout: React.FC = () => {
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Conduct live auctions as a neutral host</p>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-lg opacity-75 animate-pulse"></div>
               <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center font-bold text-white">

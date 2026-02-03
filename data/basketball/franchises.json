@@ -6,7 +6,7 @@
     "purseRemaining": 600000000,
     "totalPurse": 600000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFD700?text=LE"
+    "logoUrl": "https://ui-avatars.com/api/?name=LE&background=7C2D12&color=FFD700&size=100"
   },
   {
     "id": "bb_team_warriors",
@@ -15,7 +15,7 @@
     "purseRemaining": 600000000,
     "totalPurse": 600000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/1E40AF/FFD700?text=WG"
+    "logoUrl": "https://ui-avatars.com/api/?name=WG&background=1E40AF&color=FFD700&size=100"
   },
   {
     "id": "bb_team_bulls",
@@ -24,7 +24,7 @@
     "purseRemaining": 600000000,
     "totalPurse": 600000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/DC2626/FFFFFF?text=BF"
+    "logoUrl": "https://ui-avatars.com/api/?name=BF&background=DC2626&color=FFFFFF&size=100"
   },
   {
     "id": "bb_team_celtics",
@@ -33,6 +33,6 @@
     "purseRemaining": 600000000,
     "totalPurse": 600000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/059669/FFFFFF?text=CP"
+    "logoUrl": "https://ui-avatars.com/api/?name=CP&background=059669&color=FFFFFF&size=100"
   }
 ]

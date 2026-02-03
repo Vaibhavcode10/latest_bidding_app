@@ -1,0 +1,93 @@
+{
+  "currentLedger": {
+    "auctionId": "auction_fo_example",
+    "sport": "football", 
+    "playerId": "fb_p1",
+    "playerName": "Lionel Messi",
+    "basePrice": 20000000,
+    "currentBid": 22500000,
+    "highestBidder": {
+      "teamId": "fb_team_liverpool",
+      "teamName": "Liverpool Reds"
+    },
+    "bidHistory": [
+      {
+        "id": "bid_001",
+        "teamId": "fb_team_liverpool",
+        "teamName": "Liverpool Reds", 
+        "bidAmount": 22500000,
+        "timestamp": "2026-02-03T10:00:00.000Z",
+        "isJumpBid": false
+      }
+    ],
+    "lastBidTimestamp": "2026-02-03T10:00:00.000Z",
+    "consecutiveBidCount": {
+      "fb_team_liverpool": 1,
+      "fb_team_barcelona": 0,
+      "fb_team_madrid": 0,
+      "fb_team_juventus": 0
+    },
+    "state": "LIVE",
+    "timerStartedAt": "2026-02-03T10:00:00.000Z",
+    "timerDuration": 20,
+    "bidSlabs": [
+      {
+        "maxPrice": 100000000,
+        "increment": 2500000
+      },
+      {
+        "maxPrice": 200000000,
+        "increment": 5000000
+      },
+      {
+        "maxPrice": "Infinity",
+        "increment": 10000000
+      }
+    ],
+    "createdAt": "2026-02-03T09:30:00.000Z",
+    "updatedAt": "2026-02-03T10:00:00.000Z"
+  },
+  "activeSessions": [
+    {
+      "id": "session_football_001",
+      "sport": "football",
+      "name": "Premier Football Auction 2026",
+      "auctioneerId": "auc-football-001",
+      "auctioneerName": "David Martinez",
+      "teamIds": [
+        "fb_team_liverpool",
+        "fb_team_barcelona", 
+        "fb_team_madrid",
+        "fb_team_juventus"
+      ],
+      "playerPool": [
+        "fb_p1",
+        "fb_p2", 
+        "fb_p3",
+        "fb_p4",
+        "fb_p5"
+      ],
+      "completedPlayerIds": [],
+      "currentLedger": "currentLedger",
+      "bidSlabs": [
+        {
+          "maxPrice": 100000000,
+          "increment": 2500000
+        },
+        {
+          "maxPrice": 200000000, 
+          "increment": 5000000
+        },
+        {
+          "maxPrice": "Infinity",
+          "increment": 10000000
+        }
+      ],
+      "timerDuration": 20,
+      "status": "ACTIVE",
+      "createdAt": "2026-02-03T09:30:00.000Z",
+      "updatedAt": "2026-02-03T10:00:00.000Z"
+    }
+  ],
+  "lastUpdated": "2026-02-03T10:00:00.000Z"
+}

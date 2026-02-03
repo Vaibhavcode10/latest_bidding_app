@@ -80,7 +80,7 @@ function calculateNextBid(currentBid, slabs = DEFAULT_BID_SLABS) {
 }
 
 /**
- * Check if a team can bid (consecutive bid rule: max 2 in a row)
+ * Check if a team can bid (consecutive bid rule: prevents 3 consecutive bids)
  */
 function canTeamBid(teamId, ledger) {
   if (!ledger || !ledger.consecutiveBidCount) {
@@ -88,7 +88,7 @@ function canTeamBid(teamId, ledger) {
   }
   
   const consecutiveCount = ledger.consecutiveBidCount[teamId] || 0;
-  return consecutiveCount < 2;
+  return consecutiveCount < 2; // Allows up to 2 consecutive, blocks 3rd
 }
 
 /**
@@ -695,7 +695,7 @@ const liveAuctionEngine = {
     if (!canTeamBid(teamId, currentLedger)) {
       return { 
         success: false, 
-        error: 'Team cannot bid more than 2 times consecutively.' 
+        error: 'Team cannot bid 3 times consecutively. Let other teams bid first.' 
       };
     }
 
@@ -796,7 +796,7 @@ const liveAuctionEngine = {
     if (!canTeamBid(teamId, currentLedger)) {
       return { 
         success: false, 
-        error: 'Team cannot bid more than 2 times consecutively.' 
+        error: 'Team cannot bid 3 times consecutively. Let other teams bid first.' 
       };
     }
 

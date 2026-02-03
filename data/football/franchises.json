@@ -6,7 +6,7 @@
     "purseRemaining": 1000000000,
     "totalPurse": 1000000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/059669/FFFFFF?text=ML"
+    "logoUrl": "https://ui-avatars.com/api/?name=ML&background=059669&color=FFFFFF&size=100"
   },
   {
     "id": "fb_team_barcelona",
@@ -15,7 +15,7 @@
     "purseRemaining": 1000000000,
     "totalPurse": 1000000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFFFFF?text=BE"
+    "logoUrl": "https://ui-avatars.com/api/?name=BE&background=7C2D12&color=FFFFFF&size=100"
   },
   {
     "id": "fb_team_milan",
@@ -24,7 +24,7 @@
     "purseRemaining": 1000000000,
     "totalPurse": 1000000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/1F2937/FFFFFF?text=MT"
+    "logoUrl": "https://ui-avatars.com/api/?name=MT&background=1F2937&color=FFFFFF&size=100"
   },
   {
     "id": "fb_team_liverpool",
@@ -33,6 +33,6 @@
     "purseRemaining": 1000000000,
     "totalPurse": 1000000000,
     "playerIds": [],
-    "logoUrl": "https://via.placeholder.com/100x100/DC2626/FFFFFF?text=LR"
+    "logoUrl": "https://ui-avatars.com/api/?name=LR&background=DC2626&color=FFFFFF&size=100"
   }
 ]

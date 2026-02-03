@@ -129,7 +129,7 @@ const AuctioneerOverview: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-gray-900 dark:text-white text-xl">Loading...</div>
       </div>
     );
   }
@@ -137,19 +137,19 @@ const AuctioneerOverview: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-600/20 rounded-2xl p-8 backdrop-blur-xl">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-purple-600/10 border border-blue-200 dark:border-blue-600/20 rounded-2xl p-8 backdrop-blur-xl shadow-sm">
         <div className="flex items-center gap-4 mb-4">
           <div className="text-5xl">🎙️</div>
           <div>
-            <h1 className="text-3xl font-black text-white">Welcome, {user?.username}!</h1>
-            <p className="text-slate-400 text-lg">Neutral Auctioneer • {user?.sport?.toUpperCase()}</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white">Welcome, {user?.username}!</h1>
+            <p className="text-gray-700 dark:text-slate-400 text-lg">Neutral Auctioneer • {user?.sport?.toUpperCase()}</p>
           </div>
         </div>
         
-        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-          <h3 className="text-blue-300 font-semibold mb-2">ℹ️ Your Role</h3>
-          <p className="text-gray-400 text-sm">
-            As a <strong className="text-white">neutral auctioneer</strong>, you conduct live auctions fairly and impartially. 
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+          <h3 className="text-blue-700 dark:text-blue-300 font-semibold mb-2">ℹ️ Your Role</h3>
+          <p className="text-gray-700 dark:text-gray-400 text-sm">
+            As a <strong className="text-gray-900 dark:text-white">neutral auctioneer</strong>, you conduct live auctions fairly and impartially. 
             You don't own or represent any team - your job is to facilitate the bidding process, 
             confirm bids, and mark players as SOLD or UNSOLD.
           </p>
@@ -158,38 +158,38 @@ const AuctioneerOverview: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-600/10 to-blue-600/5 border border-blue-600/20 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-blue-600/5 border border-blue-200 dark:border-blue-600/20 rounded-xl p-6">
           <div className="text-3xl mb-2">📋</div>
-          <p className="text-slate-400 text-sm">Assigned Auctions</p>
-          <p className="text-3xl font-bold text-blue-400">{stats.totalAssigned}</p>
+          <p className="text-gray-700 dark:text-slate-400 text-sm">Assigned Auctions</p>
+          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalAssigned}</p>
         </div>
         
-        <div className="bg-gradient-to-r from-green-600/10 to-green-600/5 border border-green-600/20 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-green-50 to-green-100/50 dark:bg-gradient-to-r dark:from-green-600/10 dark:to-green-600/5 border border-green-200 dark:border-green-600/20 rounded-xl p-6">
           <div className="text-3xl mb-2">🟢</div>
-          <p className="text-slate-400 text-sm">Ready to Start</p>
-          <p className="text-3xl font-bold text-green-400">{stats.readyToStart}</p>
+          <p className="text-gray-700 dark:text-slate-400 text-sm">Ready to Start</p>
+          <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.readyToStart}</p>
         </div>
         
-        <div className="bg-gradient-to-r from-red-600/10 to-red-600/5 border border-red-600/20 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-red-50 to-red-100/50 dark:bg-gradient-to-r dark:from-red-600/10 dark:to-red-600/5 border border-red-200 dark:border-red-600/20 rounded-xl p-6">
           <div className="text-3xl mb-2">🔴</div>
-          <p className="text-slate-400 text-sm">Currently Live</p>
-          <p className="text-3xl font-bold text-red-400">{stats.live}</p>
+          <p className="text-gray-700 dark:text-slate-400 text-sm">Currently Live</p>
+          <p className="text-3xl font-bold text-red-600 dark:text-red-400">{stats.live}</p>
         </div>
         
-        <div className="bg-gradient-to-r from-gray-600/10 to-gray-600/5 border border-gray-600/20 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 dark:bg-gradient-to-r dark:from-gray-600/10 dark:to-gray-600/5 border border-gray-200 dark:border-gray-600/20 rounded-xl p-6">
           <div className="text-3xl mb-2">✅</div>
-          <p className="text-slate-400 text-sm">Completed</p>
-          <p className="text-3xl font-bold text-gray-400">{stats.completed}</p>
+          <p className="text-gray-700 dark:text-slate-400 text-sm">Completed</p>
+          <p className="text-3xl font-bold text-gray-700 dark:text-gray-400">{stats.completed}</p>
         </div>
       </div>
 
       {/* Quick Actions */}
       {stats.readyToStart > 0 && (
-        <div className="bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-600/30 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:bg-gradient-to-r dark:from-green-600/10 dark:to-emerald-600/10 border border-green-200 dark:border-green-600/30 rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-white mb-1">🚀 Ready to Start</h3>
-              <p className="text-gray-400">You have {stats.readyToStart} auction(s) ready to begin!</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">🚀 Ready to Start</h3>
+              <p className="text-gray-700 dark:text-gray-400">You have {stats.readyToStart} auction(s) ready to begin!</p>
             </div>
             <Link
               to="/auctioneer/live"
@@ -301,23 +301,23 @@ const AuctioneerOverview: React.FC = () => {
       </div>
 
       {/* How It Works */}
-      <div className="bg-gradient-to-r from-purple-600/10 to-blue-600/10 border border-purple-600/20 rounded-2xl p-6 backdrop-blur-xl">
-        <h2 className="text-xl font-bold text-white mb-4">How Live Auctions Work</h2>
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:bg-gradient-to-r dark:from-purple-600/10 dark:to-blue-600/10 border border-purple-200 dark:border-purple-600/20 rounded-2xl p-6 backdrop-blur-xl">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">How Live Auctions Work</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-4xl mb-3">1️⃣</div>
-            <h3 className="text-white font-semibold mb-2">Admin Creates Auction</h3>
-            <p className="text-gray-400 text-sm">Admin selects players, teams, and bidding rules, then assigns you as auctioneer</p>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Admin Creates Auction</h3>
+            <p className="text-gray-700 dark:text-gray-400 text-sm">Admin selects players, teams, and bidding rules, then assigns you as auctioneer</p>
           </div>
           <div className="text-center">
             <div className="text-4xl mb-3">2️⃣</div>
-            <h3 className="text-white font-semibold mb-2">You Start the Auction</h3>
-            <p className="text-gray-400 text-sm">When ready, start the live auction and select players one by one</p>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">You Start the Auction</h3>
+            <p className="text-gray-700 dark:text-gray-400 text-sm">When ready, start the live auction and select players one by one</p>
           </div>
           <div className="text-center">
             <div className="text-4xl mb-3">3️⃣</div>
-            <h3 className="text-white font-semibold mb-2">Conduct Fair Bidding</h3>
-            <p className="text-gray-400 text-sm">Confirm bids from teams, manage jump bids, and mark players SOLD or UNSOLD</p>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Conduct Fair Bidding</h3>
+            <p className="text-gray-700 dark:text-gray-400 text-sm">Confirm bids from teams, manage jump bids, and mark players SOLD or UNSOLD</p>
           </div>
         </div>
       </div>

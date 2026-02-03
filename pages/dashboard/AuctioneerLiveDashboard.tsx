@@ -200,6 +200,38 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     };
   }, [isTimerRunning, isPaused, timeRemaining]);
 
+  // Check undo availability - MOVED UP: Must be defined before the useEffect that uses it
+  const checkUndoAvailability = useCallback(async () => {
+    if (!isTimerRunning || !isLive) {
+      setCanUndo(false);
+      return;
+    }
+    
+    try {
+      const response = await api.get('/live-auction/state');
+      if (response.data?.ledger?.lastBidUndoable) {
+        const timeSince = Date.now() - response.data.ledger.lastBidUndoable.timestamp;
+        const remaining = Math.max(0, 15000 - timeSince); // 15 second window
+        
+        if (remaining > 0) {
+          setCanUndo(true);
+          setUndoRemainingTime(remaining);
+          setLastBidTeam(response.data.ledger.bidHistory?.length > 0 
+            ? response.data.ledger.bidHistory[response.data.ledger.bidHistory.length - 1].teamName 
+            : ''
+          );
+        } else {
+          setCanUndo(false);
+        }
+      } else {
+        setCanUndo(false);
+      }
+    } catch (err) {
+      console.error('Check undo error:', err);
+      setCanUndo(false);
+    }
+  }, [isTimerRunning, isLive]);
+
   // Check undo availability periodically
   useEffect(() => {
     let undoCheckInterval: NodeJS.Timeout | null = null;
@@ -341,38 +373,6 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     }
   };
 
-  // Check undo availability
-  const checkUndoAvailability = useCallback(async () => {
-    if (!isTimerRunning || !isLive) {
-      setCanUndo(false);
-      return;
-    }
-    
-    try {
-      const response = await api.get('/live-auction/state');
-      if (response.data?.ledger?.lastBidUndoable) {
-        const timeSince = Date.now() - response.data.ledger.lastBidUndoable.timestamp;
-        const remaining = Math.max(0, 15000 - timeSince); // 15 second window
-        
-        if (remaining > 0) {
-          setCanUndo(true);
-          setUndoRemainingTime(remaining);
-          setLastBidTeam(response.data.ledger.bidHistory?.length > 0 
-            ? response.data.ledger.bidHistory[response.data.ledger.bidHistory.length - 1].teamName 
-            : ''
-          );
-        } else {
-          setCanUndo(false);
-        }
-      } else {
-        setCanUndo(false);
-      }
-    } catch (err) {
-      console.error('Check undo error:', err);
-      setCanUndo(false);
-    }
-  }, [isTimerRunning, isLive]);
-
   // JUMP BID - Custom amount
   const handleJumpBid = (team: Team) => {
     if (isPaused || !isTimerRunning) return;
@@ -500,8 +500,8 @@ export const AuctioneerLiveDashboard: React.FC = () => {
   // ============================================
   if (loadingAuctions) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
-        <div className="text-cyan-400 text-xl tracking-widest uppercase">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628] flex items-center justify-center">
+        <div className="text-primary-600 dark:text-cyan-400 text-xl tracking-widest uppercase">Loading...</div>
       </div>
     );
   }
@@ -513,14 +513,14 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     const readyAuctions = assignedAuctions.filter(a => a.status === 'READY');
     
     return (
-      <div className="min-h-screen bg-[#0a1628] p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628] p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white tracking-wider uppercase mb-8 border-l-4 border-cyan-500 pl-4">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-wider uppercase mb-8 border-l-4 border-primary-500 dark:border-cyan-500 pl-4">
             Select Auction
           </h1>
           
           {readyAuctions.length === 0 ? (
-            <div className="bg-[#0d1f35] border border-cyan-900/50 p-12 text-center">
+            <div className="bg-white dark:bg-[#0d1f35] border border-gray-200 dark:border-cyan-900/50 p-12 text-center rounded-xl">
               <p className="text-gray-500 uppercase tracking-wider">No auctions available</p>
             </div>
           ) : (
@@ -529,19 +529,19 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                 <div 
                   key={auction.id}
                   onClick={() => setSelectedAuction(auction)}
-                  className="bg-[#0d1f35] border border-cyan-900/30 p-6 cursor-pointer hover:border-cyan-500 transition-all group"
+                  className="bg-white dark:bg-[#0d1f35] border border-gray-200 dark:border-cyan-900/30 p-6 cursor-pointer hover:border-primary-500 dark:hover:border-cyan-500 transition-all group rounded-xl shadow-sm"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h2 className="text-xl font-bold text-white uppercase tracking-wide">{auction.name}</h2>
-                      <p className="text-cyan-600 uppercase text-sm tracking-wider mt-1">{auction.sport}</p>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wide">{auction.name}</h2>
+                      <p className="text-primary-600 dark:text-cyan-600 uppercase text-sm tracking-wider mt-1">{auction.sport}</p>
                       <div className="flex gap-6 mt-3 text-xs text-gray-500 uppercase tracking-wider">
                         <span>{auction.participatingTeams?.length || 0} Teams</span>
                         <span>{auction.playerPool?.length || 0} Players</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 border border-cyan-500/50 flex items-center justify-center group-hover:bg-cyan-500 transition-all">
-                      <span className="text-cyan-500 group-hover:text-[#0a1628] text-xl">→</span>
+                    <div className="w-12 h-12 border border-primary-500/50 dark:border-cyan-500/50 flex items-center justify-center group-hover:bg-primary-500 dark:group-hover:bg-cyan-500 transition-all rounded-lg">
+                      <span className="text-primary-500 dark:text-cyan-500 group-hover:text-white dark:group-hover:text-[#0a1628] text-xl">→</span>
                     </div>
                   </div>
                 </div>
@@ -562,32 +562,32 @@ export const AuctioneerLiveDashboard: React.FC = () => {
       .filter((p): p is Player => p !== undefined);
 
     return (
-      <div className="min-h-screen bg-[#0a1628] p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0a1628] p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8 border-b border-cyan-900/30 pb-6">
+          <div className="flex justify-between items-center mb-8 border-b border-gray-200 dark:border-cyan-900/30 pb-6">
             <div>
-              <h1 className="text-3xl font-bold text-white uppercase tracking-wider">{selectedAuction.name}</h1>
-              <p className="text-cyan-600 uppercase text-sm tracking-wider mt-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">{selectedAuction.name}</h1>
+              <p className="text-primary-600 dark:text-cyan-600 uppercase text-sm tracking-wider mt-1">
                 {playersInPool.length} Players • {teams.length} Teams
               </p>
             </div>
             <div className="flex gap-4">
               <button
                 onClick={() => setSelectedAuction(null)}
-                className="px-6 py-3 border border-gray-700 text-gray-400 uppercase tracking-wider text-sm hover:border-gray-500 transition-all"
+                className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 uppercase tracking-wider text-sm hover:border-gray-400 dark:hover:border-gray-500 transition-all rounded-lg"
               >
                 Back
               </button>
               <button
                 onClick={shufflePlayers}
-                className="px-6 py-3 border border-cyan-700 text-cyan-400 uppercase tracking-wider text-sm hover:bg-cyan-900/30 transition-all"
+                className="px-6 py-3 border border-primary-500 dark:border-cyan-700 text-primary-600 dark:text-cyan-400 uppercase tracking-wider text-sm hover:bg-primary-50 dark:hover:bg-cyan-900/30 transition-all rounded-lg"
               >
                 🔀 Shuffle
               </button>
               <button
                 onClick={handleStartAuction}
-                className="px-8 py-3 bg-cyan-500 text-[#0a1628] font-bold uppercase tracking-wider hover:bg-cyan-400 transition-all"
+                className="px-8 py-3 bg-primary-500 dark:bg-cyan-500 text-white dark:text-[#0a1628] font-bold uppercase tracking-wider hover:bg-primary-600 dark:hover:bg-cyan-400 transition-all rounded-lg"
               >
                 🚀 Start Auction
               </button>
@@ -596,21 +596,21 @@ export const AuctioneerLiveDashboard: React.FC = () => {
 
           {/* Teams */}
           <div className="mb-8">
-            <h2 className="text-sm text-gray-500 uppercase tracking-wider mb-4">Participating Teams</h2>
+            <h2 className="text-sm text-gray-600 dark:text-gray-500 uppercase tracking-wider mb-4">Participating Teams</h2>
             <div className="grid grid-cols-4 gap-4">
               {teams.map(team => (
-                <div key={team.id} className="bg-[#0d1f35] border border-cyan-900/30 p-4">
+                <div key={team.id} className="bg-white dark:bg-[#0d1f35] border border-gray-200 dark:border-cyan-900/30 p-4 rounded-xl shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-[#0a1628] border border-cyan-900/50 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-[#0a1628] border border-gray-200 dark:border-cyan-900/50 flex items-center justify-center rounded-lg">
                       {team.logoUrl ? (
                         <img src={team.logoUrl} alt={team.name} className="w-8 h-8 object-contain" />
                       ) : (
-                        <span className="text-cyan-500 text-sm font-bold">{team.name.slice(0, 2).toUpperCase()}</span>
+                        <span className="text-primary-500 dark:text-cyan-500 text-sm font-bold">{team.name.slice(0, 2).toUpperCase()}</span>
                       )}
                     </div>
                     <div>
-                      <p className="text-white text-sm font-semibold uppercase">{team.name}</p>
-                      <p className="text-cyan-600 text-xs">{formatCr(rawToCr(team.purseRemaining))}</p>
+                      <p className="text-gray-900 dark:text-white text-sm font-semibold uppercase">{team.name}</p>
+                      <p className="text-primary-600 dark:text-cyan-600 text-xs">{formatCr(rawToCr(team.purseRemaining))}</p>
                     </div>
                   </div>
                 </div>
@@ -620,22 +620,22 @@ export const AuctioneerLiveDashboard: React.FC = () => {
 
           {/* Player Queue */}
           <div>
-            <h2 className="text-sm text-gray-500 uppercase tracking-wider mb-4">Player Queue</h2>
+            <h2 className="text-sm text-gray-600 dark:text-gray-500 uppercase tracking-wider mb-4">Player Queue</h2>
             <div className="grid grid-cols-6 gap-3">
               {playersInPool.map((player, idx) => (
-                <div key={player.id} className="bg-[#0d1f35] border border-cyan-900/30 p-3 relative">
-                  <div className="absolute -top-2 -left-2 w-6 h-6 bg-cyan-500 flex items-center justify-center">
-                    <span className="text-[#0a1628] text-xs font-bold">{idx + 1}</span>
+                <div key={player.id} className="bg-white dark:bg-[#0d1f35] border border-gray-200 dark:border-cyan-900/30 p-3 relative rounded-xl shadow-sm">
+                  <div className="absolute -top-2 -left-2 w-6 h-6 bg-primary-500 dark:bg-cyan-500 flex items-center justify-center rounded">
+                    <span className="text-white dark:text-[#0a1628] text-xs font-bold">{idx + 1}</span>
                   </div>
-                  <div className="w-full h-16 bg-[#0a1628] mb-2 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-16 bg-gray-100 dark:bg-[#0a1628] mb-2 flex items-center justify-center overflow-hidden rounded-lg">
                     {player.imageUrl ? (
                       <img src={player.imageUrl} alt={player.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-gray-600 text-2xl">👤</span>
+                      <span className="text-gray-400 dark:text-gray-600 text-2xl">👤</span>
                     )}
                   </div>
-                  <p className="text-white text-xs font-semibold uppercase truncate">{player.name}</p>
-                  <p className="text-cyan-600 text-xs">{formatCr(rawToCr(player.basePrice))}</p>
+                  <p className="text-gray-900 dark:text-white text-xs font-semibold uppercase truncate">{player.name}</p>
+                  <p className="text-primary-600 dark:text-cyan-600 text-xs">{formatCr(rawToCr(player.basePrice))}</p>
                 </div>
               ))}
             </div>
@@ -649,16 +649,16 @@ export const AuctioneerLiveDashboard: React.FC = () => {
   // LIVE AUCTION - PREMIUM BROADCAST DESIGN
   // ============================================
   return (
-    <div className="h-screen bg-[#0a1628] flex flex-col overflow-hidden">
+    <div className="h-screen bg-gray-50 dark:bg-[#0a1628] flex flex-col overflow-hidden">
       
       {/* SOLD Animation Overlay */}
       {showSoldAnimation && (
-        <div className="absolute inset-0 z-50 bg-[#0a1628]/95 flex items-center justify-center">
+        <div className="absolute inset-0 z-50 bg-white/95 dark:bg-[#0a1628]/95 flex items-center justify-center">
           <div className="text-center animate-pulse">
             <div className="text-8xl mb-4">🎉</div>
-            <div className="text-6xl font-black text-cyan-400 tracking-widest mb-4">SOLD!</div>
-            <div className="text-3xl text-white uppercase tracking-wider">{currentPlayer?.name}</div>
-            <div className="text-4xl text-yellow-400 font-bold mt-4">
+            <div className="text-6xl font-black text-primary-500 dark:text-cyan-400 tracking-widest mb-4">SOLD!</div>
+            <div className="text-3xl text-gray-900 dark:text-white uppercase tracking-wider">{currentPlayer?.name}</div>
+            <div className="text-4xl text-yellow-500 dark:text-yellow-400 font-bold mt-4">
               {formatCr(soldPrice)} → {soldToTeam}
             </div>
           </div>
@@ -667,23 +667,23 @@ export const AuctioneerLiveDashboard: React.FC = () => {
 
       {/* UNSOLD Animation Overlay */}
       {showUnsoldAnimation && (
-        <div className="absolute inset-0 z-50 bg-[#0a1628]/95 flex items-center justify-center">
+        <div className="absolute inset-0 z-50 bg-white/95 dark:bg-[#0a1628]/95 flex items-center justify-center">
           <div className="text-center">
             <div className="text-8xl mb-4">😔</div>
             <div className="text-6xl font-black text-red-500 tracking-widest mb-4">UNSOLD</div>
-            <div className="text-3xl text-white uppercase tracking-wider">{currentPlayer?.name}</div>
+            <div className="text-3xl text-gray-900 dark:text-white uppercase tracking-wider">{currentPlayer?.name}</div>
           </div>
         </div>
       )}
 
       {/* TOP BAR */}
-      <div className="bg-[#0d1f35] border-b border-cyan-900/30 px-6 py-3 flex-shrink-0">
+      <div className="bg-white dark:bg-[#0d1f35] border-b border-gray-200 dark:border-cyan-900/30 px-6 py-3 flex-shrink-0 shadow-sm">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <h1 className="text-lg font-bold text-white uppercase tracking-wider">{selectedAuction.name}</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider">{selectedAuction.name}</h1>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-red-400 text-sm uppercase tracking-wider font-semibold">Live</span>
+              <span className="text-red-500 dark:text-red-400 text-sm uppercase tracking-wider font-semibold">Live</span>
             </div>
             <span className="text-gray-500 text-sm">
               Player {currentPlayerIndex + 1} of {playerQueue.length}
@@ -691,11 +691,11 @@ export const AuctioneerLiveDashboard: React.FC = () => {
           </div>
           
           <div className="flex gap-3">
-            <button onClick={shufflePlayers} className="px-4 py-2 border border-cyan-800 text-cyan-500 text-xs uppercase hover:bg-cyan-900/30">
+            <button onClick={shufflePlayers} className="px-4 py-2 border border-primary-500 dark:border-cyan-800 text-primary-600 dark:text-cyan-500 text-xs uppercase hover:bg-primary-50 dark:hover:bg-cyan-900/30 rounded-lg">
               🔀 Shuffle
             </button>
             {isPaused ? (
-              <button onClick={handleResume} className="px-4 py-2 bg-green-600 text-white text-xs uppercase font-bold hover:bg-green-500">
+              <button onClick={handleResume} className="px-4 py-2 bg-green-500 text-white text-xs uppercase font-bold hover:bg-green-600 rounded-lg">
                 ▶ Resume
               </button>
             ) : (
@@ -719,15 +719,15 @@ export const AuctioneerLiveDashboard: React.FC = () => {
               
               {/* LEFT - BASE PRICE */}
               <div className="text-center">
-                <p className="text-gray-600 uppercase tracking-wider text-xs mb-2">Base Price</p>
-                <p className="text-3xl text-gray-400">{formatCr(basePrice)}</p>
+                <p className="text-gray-600 dark:text-gray-600 uppercase tracking-wider text-xs mb-2">Base Price</p>
+                <p className="text-3xl text-gray-700 dark:text-gray-400">{formatCr(basePrice)}</p>
               </div>
 
               {/* CENTER - PLAYER CARD */}
               <div className="text-center">
                 <div className="w-48 h-48 mx-auto mb-4 relative">
-                  <div className="absolute inset-0 border-4 border-cyan-500/30 rotate-45"></div>
-                  <div className="absolute inset-4 bg-[#0d1f35] flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 border-4 border-primary-500/30 dark:border-cyan-500/30 rotate-45 rounded-xl"></div>
+                  <div className="absolute inset-4 bg-white dark:bg-[#0d1f35] flex items-center justify-center overflow-hidden rounded-lg shadow-lg">
                     {currentPlayer.imageUrl ? (
                       <img src={currentPlayer.imageUrl} alt={currentPlayer.name} className="w-full h-full object-cover" />
                     ) : (
@@ -735,23 +735,23 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <h2 className="text-4xl font-black text-white uppercase tracking-wider mb-2">
+                <h2 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-wider mb-2">
                   {currentPlayer.name}
                 </h2>
-                <p className="text-cyan-500 uppercase tracking-wider">
+                <p className="text-primary-500 dark:text-cyan-500 uppercase tracking-wider">
                   {currentPlayer.role} {currentPlayer.age ? `• ${currentPlayer.age} YRS` : ''}
                 </p>
               </div>
 
               {/* RIGHT - CURRENT BID & TIMER */}
               <div className="text-center">
-                <p className="text-cyan-500 uppercase tracking-wider text-sm mb-2">Current Bid</p>
-                <div className={`text-6xl font-black text-white mb-4 transition-all ${bidPulse ? 'scale-110 text-cyan-400' : ''}`}>
+                <p className="text-primary-500 dark:text-cyan-500 uppercase tracking-wider text-sm mb-2">Current Bid</p>
+                <div className={`text-6xl font-black text-gray-900 dark:text-white mb-4 transition-all ${bidPulse ? 'scale-110 text-primary-500 dark:text-cyan-400' : ''}`}>
                   {formatCr(currentBid)}
                 </div>
                 
                 {highestBidder && (
-                  <p className="text-yellow-400 uppercase tracking-wider mb-4">
+                  <p className="text-yellow-500 dark:text-yellow-400 uppercase tracking-wider mb-4">
                     👑 {highestBidder.teamName}
                   </p>
                 )}
@@ -763,7 +763,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                 }`}>
                   {formatTimer(timeRemaining)}
                 </div>
-                <p className="text-gray-600 text-xs uppercase mt-1">
+                <p className="text-gray-600 dark:text-gray-600 text-xs uppercase mt-1">
                   {isPaused ? '⏸ PAUSED' : 'Time Remaining'}
                 </p>
 
@@ -772,7 +772,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                   <button
                     onClick={handleSellPlayer}
                     disabled={!highestBidder || isPaused}
-                    className="px-8 py-3 bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-8 py-3 bg-green-500 text-white font-bold uppercase tracking-wider hover:bg-green-600 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"
                   >
                     ✅ SELL
                   </button>
@@ -781,7 +781,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                   {canUndo && (
                     <button
                       onClick={handleUndoBid}
-                      className="px-6 py-3 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-400 border-2 border-orange-400 animate-pulse"
+                      className="px-6 py-3 bg-orange-500 text-white font-bold uppercase tracking-wider hover:bg-orange-400 border-2 border-orange-400 animate-pulse rounded-lg"
                       title={`Undo last bid from ${lastBidTeam} (${Math.ceil(undoRemainingTime / 1000)}s remaining)`}
                     >
                       ↶ UNDO
@@ -791,7 +791,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                   <button
                     onClick={handleUnsoldPlayer}
                     disabled={isPaused}
-                    className="px-8 py-3 bg-red-600 text-white font-bold uppercase tracking-wider hover:bg-red-500 disabled:opacity-30"
+                    className="px-8 py-3 bg-red-500 text-white font-bold uppercase tracking-wider hover:bg-red-600 disabled:opacity-30 rounded-lg"
                   >
                     ❌ UNSOLD
                   </button>
@@ -800,51 +800,41 @@ export const AuctioneerLiveDashboard: React.FC = () => {
             </div>
 
             {/* BOTTOM - TEAMS WITH BIG BID BUTTONS */}
-            <div className="bg-[#0d1f35] border-t border-cyan-900/30 p-4 flex-shrink-0">
+            <div className="bg-white dark:bg-[#0d1f35] border-t border-gray-200 dark:border-cyan-900/30 p-4 flex-shrink-0 shadow-lg">
               <div className="grid grid-cols-4 gap-4">
                 {teams.map(team => {
                   const isLeading = highestBidder?.teamId === team.id;
                   const purseCr = rawToCr(team.purseRemaining);
                   const canAfford = purseCr >= nextValidBid;
 
-                  // DEBUG: Log calculation values
-                  console.log(`DEBUG: Team ${team.name}:`, {
-                    purseRemaining: team.purseRemaining,
-                    purseCr,
-                    nextValidBid,
-                    canAfford,
-                    currentBid,
-                    basePrice
-                  });
-
                   return (
                     <div
                       key={team.id}
-                      className={`p-4 transition-all ${
+                      className={`p-4 transition-all rounded-xl ${
                         isLeading 
-                          ? 'bg-cyan-500/20 border-2 border-cyan-400' 
-                          : 'bg-[#0a1628] border border-cyan-900/30'
+                          ? 'bg-primary-100 dark:bg-cyan-500/20 border-2 border-primary-500 dark:border-cyan-400' 
+                          : 'bg-gray-50 dark:bg-[#0a1628] border border-gray-200 dark:border-cyan-900/30'
                       }`}
                     >
                       {/* Team Header */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <div className={`w-10 h-10 flex items-center justify-center ${
-                            isLeading ? 'bg-cyan-500' : 'bg-[#0d1f35] border border-cyan-900/50'
+                          <div className={`w-10 h-10 flex items-center justify-center rounded-lg ${
+                            isLeading ? 'bg-primary-500 dark:bg-cyan-500' : 'bg-white dark:bg-[#0d1f35] border border-gray-200 dark:border-cyan-900/50'
                           }`}>
                             {team.logoUrl ? (
                               <img src={team.logoUrl} alt={team.name} className="w-6 h-6 object-contain" />
                             ) : (
-                              <span className={`text-xs font-bold ${isLeading ? 'text-[#0a1628]' : 'text-cyan-500'}`}>
+                              <span className={`text-xs font-bold ${isLeading ? 'text-white dark:text-[#0a1628]' : 'text-primary-500 dark:text-cyan-500'}`}>
                                 {team.name.slice(0, 2).toUpperCase()}
                               </span>
                             )}
                           </div>
                           <div>
-                            <p className={`font-bold uppercase text-sm ${isLeading ? 'text-white' : 'text-gray-300'}`}>
+                            <p className={`font-bold uppercase text-sm ${isLeading ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                               {team.name}
                             </p>
-                            <p className={`text-xs ${isLeading ? 'text-cyan-300' : 'text-gray-500'}`}>
+                            <p className={`text-xs ${isLeading ? 'text-primary-600 dark:text-cyan-300' : 'text-gray-500'}`}>
                               {formatCr(purseCr)} left
                             </p>
                           </div>
@@ -856,10 +846,10 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                       <button
                         onClick={() => handleRaiseBid(team)}
                         disabled={isPaused || !canAfford}
-                        className={`w-full py-4 font-bold text-lg uppercase tracking-wider transition-all mb-2 ${
+                        className={`w-full py-4 font-bold text-lg uppercase tracking-wider transition-all mb-2 rounded-lg ${
                           !canAfford || isPaused
-                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-cyan-500 text-[#0a1628] hover:bg-cyan-400 active:scale-95'
+                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-primary-500 dark:bg-cyan-500 text-white dark:text-[#0a1628] hover:bg-primary-600 dark:hover:bg-cyan-400 active:scale-95'
                         }`}
                       >
                         {isPaused ? '⏸ PAUSED' : !canAfford ? '💸 LOW PURSE' : `⬆️ BID ${formatCr(nextValidBid)}`}
@@ -874,12 +864,12 @@ export const AuctioneerLiveDashboard: React.FC = () => {
                           value={customBidAmounts[team.id] || ''}
                           onChange={(e) => setCustomBidAmounts(prev => ({ ...prev, [team.id]: e.target.value }))}
                           disabled={isPaused || !isTimerRunning}
-                          className="flex-1 px-3 py-2 bg-[#0d1f35] border border-cyan-900/50 text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                          className="flex-1 px-3 py-2 bg-gray-50 dark:bg-[#0d1f35] border border-gray-300 dark:border-cyan-900/50 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 dark:focus:border-cyan-500 disabled:opacity-50 rounded-lg"
                         />
                         <button
                           onClick={() => handleJumpBid(team)}
                           disabled={isPaused || !customBidAmounts[team.id] || !isTimerRunning}
-                          className="px-4 py-2 bg-yellow-500 text-[#0a1628] font-bold hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-yellow-500 text-white dark:text-[#0a1628] font-bold hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"
                         >
                           🚀
                         </button>
@@ -894,10 +884,10 @@ export const AuctioneerLiveDashboard: React.FC = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="text-6xl mb-4">🏆</div>
-              <h2 className="text-3xl font-bold text-white uppercase tracking-wider">Auction Complete!</h2>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">Auction Complete!</h2>
               <button
                 onClick={() => navigate('/auctioneer')}
-                className="mt-6 px-8 py-3 bg-cyan-500 text-[#0a1628] font-bold uppercase"
+                className="mt-6 px-8 py-3 bg-primary-500 dark:bg-cyan-500 text-white dark:text-[#0a1628] font-bold uppercase rounded-lg hover:bg-primary-600 dark:hover:bg-cyan-400"
               >
                 Back to Dashboard
               </button>
