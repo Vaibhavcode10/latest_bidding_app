@@ -1,5 +1,16 @@
 [
   {
+    "id": "1770183697232_bdzvb0shy",
+    "timestamp": "2026-02-04T05:41:37.232Z",
+    "action": "AUCTION_CREATED",
+    "sport": "football",
+    "auctionId": "auction_fo_1770183697224",
+    "auctionName": "ipl",
+    "createdBy": "admin_1",
+    "status": "READY",
+    "assignedAuctioneerId": "auc-football-001"
+  },
+  {
     "id": "1769669014826_tk8dh2lmo",
     "timestamp": "2026-01-29T06:43:34.826Z",
     "action": "AUCTION_CREATED",

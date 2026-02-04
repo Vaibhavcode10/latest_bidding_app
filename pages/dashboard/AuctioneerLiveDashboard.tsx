@@ -186,6 +186,38 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     fetchFreshAuctionData();
   }, [selectedAuction?.id, selectedAuction?.sport]);
 
+  // Check undo availability - MUST be defined before useEffect that uses it
+  const checkUndoAvailability = useCallback(async () => {
+    if (!isTimerRunning || !isLive) {
+      setCanUndo(false);
+      return;
+    }
+    
+    try {
+      const response = await api.get('/live-auction/state');
+      if (response.data?.ledger?.lastBidUndoable) {
+        const timeSince = Date.now() - response.data.ledger.lastBidUndoable.timestamp;
+        const remaining = Math.max(0, 15000 - timeSince); // 15 second window
+        
+        if (remaining > 0) {
+          setCanUndo(true);
+          setUndoRemainingTime(remaining);
+          setLastBidTeam(response.data.ledger.bidHistory?.length > 0 
+            ? response.data.ledger.bidHistory[response.data.ledger.bidHistory.length - 1].teamName 
+            : ''
+          );
+        } else {
+          setCanUndo(false);
+        }
+      } else {
+        setCanUndo(false);
+      }
+    } catch (err) {
+      console.error('Check undo error:', err);
+      setCanUndo(false);
+    }
+  }, [isTimerRunning, isLive]);
+
   // Timer countdown
   useEffect(() => {
     if (isTimerRunning && !isPaused && timeRemaining > 0) {
@@ -340,38 +372,6 @@ export const AuctioneerLiveDashboard: React.FC = () => {
       alert('Failed to undo bid');
     }
   };
-
-  // Check undo availability
-  const checkUndoAvailability = useCallback(async () => {
-    if (!isTimerRunning || !isLive) {
-      setCanUndo(false);
-      return;
-    }
-    
-    try {
-      const response = await api.get('/live-auction/state');
-      if (response.data?.ledger?.lastBidUndoable) {
-        const timeSince = Date.now() - response.data.ledger.lastBidUndoable.timestamp;
-        const remaining = Math.max(0, 15000 - timeSince); // 15 second window
-        
-        if (remaining > 0) {
-          setCanUndo(true);
-          setUndoRemainingTime(remaining);
-          setLastBidTeam(response.data.ledger.bidHistory?.length > 0 
-            ? response.data.ledger.bidHistory[response.data.ledger.bidHistory.length - 1].teamName 
-            : ''
-          );
-        } else {
-          setCanUndo(false);
-        }
-      } else {
-        setCanUndo(false);
-      }
-    } catch (err) {
-      console.error('Check undo error:', err);
-      setCanUndo(false);
-    }
-  }, [isTimerRunning, isLive]);
 
   // JUMP BID - Custom amount
   const handleJumpBid = (team: Team) => {

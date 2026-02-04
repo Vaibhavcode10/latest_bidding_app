@@ -31,7 +31,7 @@
         "id": "fb_team_barcelona",
         "name": "Barcelona Eagles",
         "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFFFFF?text=BE",
-        "purseRemaining": 165000000,
+        "purseRemaining": 65000000,
         "totalPurse": 1000000000
       },
       {
@@ -84,7 +84,7 @@
     },
     "liveSessionStartedAt": "2026-01-29T05:13:31.953Z",
     "liveSessionStartedBy": "auc-football-001",
-    "updatedAt": "2026-01-29T07:25:15.202Z"
+    "updatedAt": "2026-02-04T05:54:27.466Z"
   },
   {
     "id": "auction_fo_1769669014798",
@@ -104,6 +104,90 @@
       "id": "auc-football-001",
       "name": "David Martinez",
       "assignedAt": "2026-01-29T06:43:34.798Z",
+      "assignedBy": "admin_1"
+    },
+    "participatingTeams": [
+      {
+        "id": "fb_team_madrid",
+        "name": "Madrid Lions",
+        "logoUrl": "https://via.placeholder.com/100x100/059669/FFFFFF?text=ML",
+        "purseRemaining": 1000000000,
+        "totalPurse": 1000000000
+      },
+      {
+        "id": "fb_team_barcelona",
+        "name": "Barcelona Eagles",
+        "logoUrl": "https://via.placeholder.com/100x100/7C2D12/FFFFFF?text=BE",
+        "purseRemaining": 1000000000,
+        "totalPurse": 1000000000
+      },
+      {
+        "id": "fb_team_milan",
+        "name": "Milan Thunder",
+        "logoUrl": "https://via.placeholder.com/100x100/1F2937/FFFFFF?text=MT",
+        "purseRemaining": 1000000000,
+        "totalPurse": 1000000000
+      },
+      {
+        "id": "fb_team_liverpool",
+        "name": "Liverpool Reds",
+        "logoUrl": "https://via.placeholder.com/100x100/DC2626/FFFFFF?text=LR",
+        "purseRemaining": 1000000000,
+        "totalPurse": 1000000000
+      }
+    ],
+    "teamIds": [
+      "fb_team_madrid",
+      "fb_team_barcelona",
+      "fb_team_milan",
+      "fb_team_liverpool"
+    ],
+    "playerPool": [
+      "fb_p1",
+      "fb_p2",
+      "fb_p3",
+      "fo_p1769074306880"
+    ],
+    "completedPlayerIds": [],
+    "bidSlabs": [
+      {
+        "maxPrice": 10,
+        "increment": 0.25
+      },
+      {
+        "maxPrice": 20,
+        "increment": 0.5
+      },
+      {
+        "maxPrice": null,
+        "increment": 1
+      }
+    ],
+    "timerDuration": 20,
+    "settings": {
+      "minBidIncrement": 100000,
+      "maxPlayersPerTeam": 15,
+      "bidTimeLimit": 30
+    }
+  },
+  {
+    "id": "auction_fo_1770183697224",
+    "name": "ipl",
+    "sport": "football",
+    "description": "q",
+    "logoUrl": "",
+    "startDate": "2026-02-05T12:12",
+    "endDate": "2026-02-05T14:14",
+    "status": "READY",
+    "createdBy": "admin_1",
+    "createdAt": "2026-02-04T05:41:37.224Z",
+    "invitedAuctioneers": [],
+    "acceptedAuctioneers": [],
+    "registeredPlayers": [],
+    "assignedAuctioneer": {
+      "id": "auc-football-001",
+      "name": "David Martinez",
+      "assignedAt": "2026-02-04T05:41:37.224Z",
       "assignedBy": "admin_1"
     },
     "participatingTeams": [
