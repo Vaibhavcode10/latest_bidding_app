@@ -168,42 +168,6 @@ const DashboardLayout: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-          <button 
-            onClick={() => navigate('/teams')}
-            className={`w-full px-4 py-3 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-all border border-gray-200 dark:border-gray-600 font-medium flex items-center gap-2 ${
-              sidebarCollapsed ? 'justify-center' : 'justify-center'
-            }`}
-            title={sidebarCollapsed ? 'Switch Sport' : ''}
-          >
-            <span className="text-lg">{getSportIcon(currentSport)}</span>
-            {!sidebarCollapsed && <span>Switch Sport</span>}
-          </button>
-          {!sidebarCollapsed && (
-            <div className="text-center">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current Sport:</p>
-              <p className="text-sm font-medium text-primary-600 dark:text-primary-400 capitalize">{currentSport}</p>
-            </div>
-          )}
-          <button 
-            onClick={() => {
-              logout();
-              navigate('/');
-            }}
-            className={`w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors font-medium flex items-center gap-2 ${
-              sidebarCollapsed ? 'justify-center' : 'justify-center'
-            }`}
-            title={sidebarCollapsed ? 'Sign Out' : ''}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {!sidebarCollapsed && <span>Sign Out</span>}
-          </button>
-        </div>
-      </aside>
-
       {/* Content Area */}
       <main className={`flex-1 bg-gray-50 dark:bg-gray-900 relative transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
         <header className={`h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 fixed top-0 z-20 shadow-sm transition-all duration-300 ${
