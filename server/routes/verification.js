@@ -1,30 +1,23 @@
 import express from 'express';
-import { fileStore } from '../fileStore.js';
+import { 
+  getPlayersBySport, 
+  updatePlayer, 
+  getPlayerById,
+  createHistoryEntry,
+  getHistory 
+} from '../dataStore.js';
 
 const router = express.Router();
 
 // History logging helper function
 const logHistoryAction = async (action, details) => {
   try {
-    const historyFilePath = 'data/history.json';
-    let history = [];
-    
-    try {
-      history = await fileStore.readJSON(historyFilePath);
-    } catch (err) {
-      // History file doesn't exist, start with empty array
-      history = [];
-    }
-    
     const historyEntry = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
       action,
       ...details
     };
     
-    history.unshift(historyEntry); // Add to beginning of array
-    await fileStore.writeJSON(historyFilePath, history);
+    await createHistoryEntry(historyEntry);
     console.log('✅ History action logged:', action, details);
   } catch (err) {
     console.error('❌ Error logging history action:', err);
@@ -45,8 +38,7 @@ router.get('/verification-requests/:sport', async (req, res) => {
       });
     }
 
-    const playersFilePath = `data/${sport}/players.json`;
-    const players = await fileStore.readJSON(playersFilePath);
+    const players = await getPlayersBySport(sport);
     
     // Return unverified players as verification requests
     const unverifiedPlayers = players.filter(player => !player.verified);
@@ -78,21 +70,26 @@ router.post('/verification-request/:sport/:playerId', async (req, res) => {
       });
     }
 
-    const playersFilePath = `data/${sport}/players.json`;
-    let players = await fileStore.readJSON(playersFilePath);
-    
-    const playerIndex = players.findIndex(p => p.id === playerId);
-    if (playerIndex === -1) {
+    const player = await getPlayerById(playerId);
+    if (!player) {
       return res.status(404).json({ 
         success: false, 
         error: 'Player not found' 
       });
     }
 
+    // Verify sport matches
+    if (player.sport !== sport) {
+      return res.status(400).json({
+        success: false,
+        error: 'Player sport mismatch'
+      });
+    }
+
     // Update player with verification request timestamp
-    players[playerIndex].verificationRequestedAt = new Date().toISOString();
-    
-    await fileStore.writeJSON(playersFilePath, players);
+    await updatePlayer(playerId, {
+      verificationRequestedAt: new Date().toISOString()
+    });
     
     res.json({
       success: true,
@@ -121,24 +118,30 @@ router.post('/verify-player/:sport/:playerId', async (req, res) => {
       });
     }
 
-    const playersFilePath = `data/${sport}/players.json`;
-    let players = await fileStore.readJSON(playersFilePath);
-    
-    const playerIndex = players.findIndex(p => p.id === playerId);
-    if (playerIndex === -1) {
+    const player = await getPlayerById(playerId);
+    if (!player) {
       return res.status(404).json({ 
         success: false, 
         error: 'Player not found' 
       });
     }
 
-    const player = players[playerIndex];
+    // Verify sport matches
+    if (player.sport !== sport) {
+      return res.status(400).json({
+        success: false,
+        error: 'Player sport mismatch'
+      });
+    }
+
     const previousStatus = player.verified;
     
     // Update player verification status
-    players[playerIndex].verified = true;
-    players[playerIndex].verifiedAt = new Date().toISOString();
-    players[playerIndex].verifiedBy = userId;
+    const updatedPlayer = await updatePlayer(playerId, {
+      verified: true,
+      verifiedAt: new Date().toISOString(),
+      verifiedBy: userId
+    });
     
     // Log history action
     await logHistoryAction('PLAYER_VERIFICATION', {
@@ -148,16 +151,14 @@ router.post('/verify-player/:sport/:playerId', async (req, res) => {
       adminUserId: userId,
       previousStatus: previousStatus ? 'VERIFIED' : 'UNVERIFIED',
       newStatus: 'VERIFIED',
-      role: player.role,
+      role: player.playerRole || player.role,
       basePrice: player.basePrice
     });
     
-    await fileStore.writeJSON(playersFilePath, players);
-    
     res.json({
       success: true,
-      message: `Player ${players[playerIndex].name} verified successfully`,
-      player: players[playerIndex]
+      message: `Player ${updatedPlayer.name} verified successfully`,
+      player: updatedPlayer
     });
   } catch (err) {
     console.error('Verify player error:', err);
@@ -182,8 +183,7 @@ router.get('/eligible-players/:sport', async (req, res) => {
       });
     }
 
-    const playersFilePath = `data/${sport}/players.json`;
-    const players = await fileStore.readJSON(playersFilePath);
+    const players = await getPlayersBySport(sport);
     
     // Return only verified players
     const eligiblePlayers = players.filter(player => player.verified === true);
@@ -214,15 +214,7 @@ router.get('/history', async (req, res) => {
       });
     }
 
-    const historyFilePath = 'data/history.json';
-    let history = [];
-    
-    try {
-      history = await fileStore.readJSON(historyFilePath);
-    } catch (err) {
-      // History file doesn't exist, return empty array
-      history = [];
-    }
+    const history = await getHistory();
     
     console.log('📚 History request - found', history.length, 'entries');
     

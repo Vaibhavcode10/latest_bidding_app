@@ -6,7 +6,17 @@
  */
 
 import express from 'express';
-import { fileStore } from '../fileStore.js';
+import { 
+  getHistory, 
+  getHistoryBySport,
+  getHistoryByAuctioneer,
+  getAuctionsBySport, 
+  getBidsByAuction,
+  createHistoryEntry,
+  getActiveLiveSessions,
+  getActiveLiveSessionsByAuctioneer,
+  getLiveSessionById
+} from '../dataStore.js';
 
 const router = express.Router();
 
@@ -42,25 +52,27 @@ router.get('/', requireAdminOrAuctioneer, async (req, res) => {
     const { sport, auctioneerId } = req.query;
     
     let history = [];
-    try {
-      history = await fileStore.readJSON('data/auction-history.json');
-    } catch (err) {
-      // No history file yet
-    }
+    console.log(`📚 [FIRESTORE] Getting auction history - sport: ${sport}, auctioneer: ${auctioneerId || req.userId}`);
 
-    // Filter by sport if specified
-    if (sport) {
-      history = history.filter(h => h.sport === sport);
-    }
-
-    // Filter by auctioneer if specified (or if user is auctioneer, only show their auctions)
+    // Determine which query strategy to use
     if (req.userRole === 'auctioneer' || auctioneerId) {
+      // Get history for specific auctioneer
       const filterAuctioneerId = auctioneerId || req.userId;
-      history = history.filter(h => h.auctioneerId === filterAuctioneerId);
+      history = await getHistoryByAuctioneer(filterAuctioneerId);
+      
+      // Further filter by sport if specified
+      if (sport) {
+        history = history.filter(h => h.sport === sport);
+      }
+    } else if (sport) {
+      // Get history for specific sport
+      history = await getHistoryBySport(sport);
+    } else {
+      // Get all history (admin only)
+      history = await getHistory();
     }
 
-    // Sort by completion date (newest first)
-    history.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+    console.log(`✅ [FIRESTORE] Retrieved ${history.length} auction history records`);
 
     res.json({
       success: true,
@@ -81,18 +93,19 @@ router.get('/:auctionId', requireAdminOrAuctioneer, async (req, res) => {
   try {
     const { auctionId } = req.params;
     
-    let history = [];
-    try {
-      history = await fileStore.readJSON('data/auction-history.json');
-    } catch (err) {
-      return res.status(404).json({ success: false, error: 'Auction history not found' });
-    }
-
+    console.log(`🔍 [FIRESTORE] Searching for auction history: ${auctionId}`);
+    
+    // Get all history and find the specific auction
+    // Note: In future, could add getHistoryByAuctionId for better performance
+    const history = await getHistory(1000); // Get more records to search
     const auctionHistory = history.find(h => h.auctionId === auctionId);
     
     if (!auctionHistory) {
+      console.log(`❌ [FIRESTORE] Auction history not found for: ${auctionId}`);
       return res.status(404).json({ success: false, error: 'Auction not found in history' });
     }
+
+    console.log(`✅ [FIRESTORE] Found auction history: ${auctionHistory.auctionName || auctionId}`);
 
     // Access control: auctioneer can only view their own auctions
     if (req.userRole === 'auctioneer' && auctionHistory.auctioneerId !== req.userId) {
@@ -115,20 +128,19 @@ router.get('/:auctionId', requireAdminOrAuctioneer, async (req, res) => {
  */
 router.get('/ledgers/active', requireAdminOrAuctioneer, async (req, res) => {
   try {
-    let ledgers = [];
-    try {
-      ledgers = await fileStore.readJSON('data/auction-ledgers.json');
-    } catch (err) {
-      // No ledgers file yet
-    }
+    console.log(`📊 [FIRESTORE] Getting active auction ledgers/sessions`);
+    
+    let activeLedgers = [];
 
-    // Filter only active ledgers
-    const activeLedgers = ledgers.filter(l => l.status === 'IN_PROGRESS');
-
-    // Filter by auctioneer if not admin
+    // Get active live sessions based on user role
     if (req.userRole === 'auctioneer') {
-      activeLedgers = activeLedgers.filter(l => l.auctioneerId === req.userId);
+      activeLedgers = await getActiveLiveSessionsByAuctioneer(req.userId);
+    } else {
+      // Admin can see all active sessions
+      activeLedgers = await getActiveLiveSessions();
     }
+
+    console.log(`✅ [FIRESTORE] Retrieved ${activeLedgers.length} active ledgers/sessions`);
 
     res.json({
       success: true,
@@ -149,18 +161,16 @@ router.get('/ledgers/:auctionId', requireAdminOrAuctioneer, async (req, res) => 
   try {
     const { auctionId } = req.params;
     
-    let ledgers = [];
-    try {
-      ledgers = await fileStore.readJSON('data/auction-ledgers.json');
-    } catch (err) {
+    console.log(`🔍 [FIRESTORE] Getting live session/ledger for auction: ${auctionId}`);
+    
+    const ledger = await getLiveSessionById(auctionId);
+    
+    if (!ledger) {
+      console.log(`❌ [FIRESTORE] Live session/ledger not found for: ${auctionId}`);
       return res.status(404).json({ success: false, error: 'Auction ledger not found' });
     }
 
-    const ledger = ledgers.find(l => l.auctionId === auctionId);
-    
-    if (!ledger) {
-      return res.status(404).json({ success: false, error: 'Auction ledger not found' });
-    }
+    console.log(`✅ [FIRESTORE] Found ledger for auction: ${auctionId}, status: ${ledger.status}`);
 
     // Access control: auctioneer can only view their own ledgers
     if (req.userRole === 'auctioneer' && ledger.auctioneerId !== req.userId) {
@@ -185,22 +195,25 @@ router.get('/stats', requireAdminOrAuctioneer, async (req, res) => {
   try {
     const { sport, auctioneerId } = req.query;
     
+    console.log(`📈 [FIRESTORE] Getting auction statistics - sport: ${sport}, auctioneer: ${auctioneerId || req.userId}`);
+    
     let history = [];
-    try {
-      history = await fileStore.readJSON('data/auction-history.json');
-    } catch (err) {
-      // No history yet
-    }
 
-    // Apply filters
-    if (sport) {
-      history = history.filter(h => h.sport === sport);
-    }
-
+    // Get history based on filters - same logic as main history endpoint
     if (req.userRole === 'auctioneer' || auctioneerId) {
       const filterAuctioneerId = auctioneerId || req.userId;
-      history = history.filter(h => h.auctioneerId === filterAuctioneerId);
+      history = await getHistoryByAuctioneer(filterAuctioneerId);
+      
+      if (sport) {
+        history = history.filter(h => h.sport === sport);
+      }
+    } else if (sport) {
+      history = await getHistoryBySport(sport);
+    } else {
+      history = await getHistory();
     }
+
+    console.log(`✅ [FIRESTORE] Calculating stats from ${history.length} history records`);
 
     // Calculate stats
     const stats = {

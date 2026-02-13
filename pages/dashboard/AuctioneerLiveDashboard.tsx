@@ -148,7 +148,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     const fetchPlayers = async () => {
       if (!selectedAuction?.sport) return;
       try {
-        const response: any = await api.get(`/players/${selectedAuction.sport}?verified=true`);
+        const response: any = await api.get(`/players/${selectedAuction.sport}`);
         const allPlayers = response.data || response.players || response || [];
         setPlayers(Array.isArray(allPlayers) ? allPlayers : []);
       } catch (err) {

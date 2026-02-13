@@ -165,11 +165,23 @@ export const api = {
         url += `${separator}userId=${encodeURIComponent(userContext.userId)}&userRole=${encodeURIComponent(userContext.userRole)}`;
       }
       
+      console.log(`🗑️ DELETE request to: ${url}`);
+      
       const res = await fetch(url, { method: 'DELETE' });
-      return res.ok;
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error(`❌ Delete failed (${res.status}):`, errorData);
+        throw new Error(errorData.error || `Delete failed with status ${res.status}`);
+      }
+      
+      const responseData = await res.json().catch(() => ({ success: true }));
+      console.log('✅ Delete response:', responseData);
+      
+      return res.ok && (responseData.success !== false);
     } catch (err) {
-      console.error(`API Delete Error (${entity}):`, err);
-      return false;
+      console.error(`❌ API Delete Error (${entity}):`, err);
+      throw err;
     }
   },
 

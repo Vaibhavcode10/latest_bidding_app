@@ -101,12 +101,26 @@ export interface Auctioneer {
   // NOTE: No teamIds or franchiseId - auctioneer is neutral
 }
 
+// User interface for authentication
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  name: string;
+  password?: string;  // Optional in responses for security
+  role: 'admin' | 'player' | 'auctioneer';
+  sport?: string;  // Required for players and auctioneers
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Player {
   id: string;
+  userId?: string;  // Links to user record for authentication
   name: string;
   sport: string;
   role: string;
-  basePrice: number;
+  basePrice?: number;  // Made optional, can be set later by player
   currentBid: number;
   soldPrice?: number;
   status: PlayerStatus;
@@ -154,7 +168,7 @@ export interface BiddingRequest {
   playerName: string;
   sport: string;
   role: string;
-  basePrice: number;
+  basePrice?: number;  // Made optional
   status: BiddingRequestStatus;
   requestedAt: string;
   approvedAt?: string;
@@ -173,7 +187,7 @@ export interface PlayerProfile {
   height?: string;
   weight?: string;
   age?: number;
-  basePrice: number;
+  basePrice?: number;  // Made optional, can be set by player
   bio?: string;
   imageUrl?: string;
   createdAt: string;

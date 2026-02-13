@@ -29,10 +29,10 @@ interface Player {
 
 const TeamsAndPlayers: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'teams' | 'players' | 'verification'>('teams');
+  const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [unverifiedPlayers, setUnverifiedPlayers] = useState<Player[]>([]);
+
   const [selectedSport, setSelectedSport] = useState(user?.sport || 'football');
   
   // Form states
@@ -50,9 +50,9 @@ const TeamsAndPlayers: React.FC = () => {
   
   const [playerFormData, setPlayerFormData] = useState({
     name: '',
-    role: '',
-    basePrice: 0,
-    imageUrl: ''
+    username: '',
+    email: '',
+    password: '',
   });
 
   const sports = ['football', 'cricket', 'basketball', 'baseball', 'volleyball'];
@@ -60,7 +60,6 @@ const TeamsAndPlayers: React.FC = () => {
   useEffect(() => {
     fetchTeams();
     fetchPlayers();
-    fetchUnverifiedPlayers();
   }, [selectedSport]);
 
   const fetchTeams = async () => {
@@ -73,16 +72,7 @@ const TeamsAndPlayers: React.FC = () => {
     setPlayers(data);
   };
 
-  const fetchUnverifiedPlayers = async () => {
-    try {
-      const response = await api.get(`/verification/${selectedSport}/pending`);
-      if (response.data.success) {
-        setUnverifiedPlayers(response.data.requests || []);
-      }
-    } catch (error) {
-      console.error('Error fetching unverified players:', error);
-    }
-  };
+
 
   // Team handlers
   const handleTeamSubmit = async (e: React.FormEvent) => {
@@ -124,8 +114,13 @@ const TeamsAndPlayers: React.FC = () => {
   const handlePlayerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingPlayerId) {
-      await api.updateEntity('players', editingPlayerId, playerFormData, selectedSport);
+      // For editing, only update player-specific fields
+      const updateData = {
+        name: playerFormData.name,
+      };
+      await api.updateEntity('players', editingPlayerId, updateData, selectedSport);
     } else {
+      // For creating new player, send all required auth fields
       await api.createEntity('players', playerFormData, selectedSport);
     }
     resetPlayerForm();
@@ -135,59 +130,41 @@ const TeamsAndPlayers: React.FC = () => {
   const handleEditPlayer = (player: Player) => {
     setPlayerFormData({ 
       name: player.name, 
-      role: player.role, 
-      basePrice: player.basePrice,
-      imageUrl: player.imageUrl || ''
+      username: '',  // Don't show existing auth data
+      email: '',
+      password: ''
     });
     setEditingPlayerId(player.id);
     setShowPlayerForm(true);
   };
 
   const handleDeletePlayer = async (id: string) => {
-    if (confirm('Delete this player?')) {
-      await api.deleteEntity('players', id, selectedSport);
-      fetchPlayers();
+    const playerName = players.find(p => p.id === id)?.name || 'player';
+    if (confirm(`Are you sure you want to delete ${playerName}? This will permanently remove both the player and their login account.`)) {
+      const userContext = user ? {
+        userId: user.id,
+        userRole: user.role
+      } : undefined;
+      
+      try {
+        const success = await api.deleteEntity('players', id, selectedSport, userContext);
+        if (success) {
+          fetchPlayers();
+          alert(`${playerName} has been deleted successfully.`);
+        } else {
+          alert(`Failed to delete ${playerName}. You may not have permission or there was a server error.`);
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert(`Failed to delete ${playerName}. Server error: ${error.message || 'Unknown error'}`);
+      }
     }
   };
 
   const resetPlayerForm = () => {
-    setPlayerFormData({ name: '', role: '', basePrice: 0, imageUrl: '' });
+    setPlayerFormData({ name: '', username: '', email: '', password: '' });
     setEditingPlayerId(null);
     setShowPlayerForm(false);
-  };
-
-  // Verification handlers
-  const handleVerifyPlayer = async (playerId: string) => {
-    try {
-      const response = await api.post(`/verification/${selectedSport}/${playerId}/verify`, {
-        userId: user?.id,
-        userRole: user?.role
-      });
-      if (response.data.success) {
-        alert('Player verified successfully!');
-        fetchUnverifiedPlayers();
-        fetchPlayers();
-      }
-    } catch (error) {
-      console.error('Error verifying player:', error);
-      alert('Failed to verify player');
-    }
-  };
-
-  const handleRejectPlayer = async (playerId: string, reason: string) => {
-    try {
-      const response = await api.post(`/verification/${selectedSport}/${playerId}/reject`, {
-        userId: user?.id,
-        userRole: user?.role,
-        reason
-      });
-      if (response.data.success) {
-        alert('Player rejected');
-        fetchUnverifiedPlayers();
-      }
-    } catch (error) {
-      console.error('Error rejecting player:', error);
-    }
   };
 
   const getSportIcon = (sport: string) => {
@@ -250,16 +227,6 @@ const TeamsAndPlayers: React.FC = () => {
           }`}
         >
           Players ({players.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('verification')}
-          className={`flex-1 py-3 px-6 rounded-md font-medium transition-all ${
-            activeTab === 'verification'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
-          }`}
-        >
-          ✅ Verification ({unverifiedPlayers.length})
         </button>
       </div>
 
@@ -437,39 +404,57 @@ const TeamsAndPlayers: React.FC = () => {
                 {editingPlayerId ? '✏️ Edit Player' : '⭐ Add New Player'}
               </h3>
               <form onSubmit={handlePlayerSubmit} className="space-y-4">
+                {!editingPlayerId && (
+                  <>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                      🔐 Create Player Account
+                    </h4>
+                  </>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
-                    placeholder="Player Name"
+                    placeholder="Player Name *"
                     value={playerFormData.name}
                     onChange={(e) => setPlayerFormData({ ...playerFormData, name: e.target.value })}
                     className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     required
                   />
-                  <input
-                    type="text"
-                    placeholder="Role (e.g., Batsman, Forward)"
-                    value={playerFormData.role}
-                    onChange={(e) => setPlayerFormData({ ...playerFormData, role: e.target.value })}
-                    className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Base Price"
-                    value={playerFormData.basePrice}
-                    onChange={(e) => setPlayerFormData({ ...playerFormData, basePrice: Number(e.target.value) })}
-                    className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                    required
-                  />
-                  <input
-                    type="url"
-                    placeholder="Image URL (optional)"
-                    value={playerFormData.imageUrl}
-                    onChange={(e) => setPlayerFormData({ ...playerFormData, imageUrl: e.target.value })}
-                    className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                  />
+                  {!editingPlayerId && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Username *"
+                        value={playerFormData.username}
+                        onChange={(e) => setPlayerFormData({ ...playerFormData, username: e.target.value })}
+                        className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        required
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email *"
+                        value={playerFormData.email}
+                        onChange={(e) => setPlayerFormData({ ...playerFormData, email: e.target.value })}
+                        className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        required
+                      />
+                      <input
+                        type="password"
+                        placeholder="Password *"
+                        value={playerFormData.password}
+                        onChange={(e) => setPlayerFormData({ ...playerFormData, password: e.target.value })}
+                        className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        required
+                        minLength={6}
+                      />
+                    </>
+                  )}
                 </div>
+                {!editingPlayerId && (
+                  <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <strong>📌 Note:</strong> The player will be able to log in with these credentials and can update their profile details after logging in.
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -523,14 +508,6 @@ const TeamsAndPlayers: React.FC = () => {
                         {player.status || 'AVAILABLE'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">Verified</span>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        player.verified ? 'bg-blue-100 dark:bg-cyan-500/20 text-blue-600 dark:text-cyan-400' : 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400'
-                      }`}>
-                        {player.verified ? '✅ Yes' : '⏳ Pending'}
-                      </span>
-                    </div>
                   </div>
                   
                   <div className="flex gap-2">
@@ -555,62 +532,6 @@ const TeamsAndPlayers: React.FC = () => {
               <div className="text-6xl mb-4">⭐</div>
               <p className="text-gray-600 dark:text-gray-400 text-lg font-semibold">No players yet</p>
               <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Add players to be auctioned</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Verification Tab */}
-      {activeTab === 'verification' && (
-        <div className="space-y-6">
-          <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-xl p-4">
-            <p className="text-yellow-700 dark:text-yellow-400 text-sm">
-              ⚠️ Players must be verified before they can be added to an auction. Review and approve player registrations below.
-            </p>
-          </div>
-
-          {unverifiedPlayers.length > 0 ? (
-            <div className="space-y-4">
-              {unverifiedPlayers.map((player: any) => (
-                <div key={player.id} className="bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-cyan-900/30 rounded-2xl p-6 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center space-x-4">
-                    {player.imageUrl ? (
-                      <img src={player.imageUrl} alt={player.name} className="w-16 h-16 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center text-2xl">👤</div>
-                    )}
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{player.name || player.playerName}</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Role: {player.role}</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Base Price: ₹{((player.basePrice || 0) / 10000000).toFixed(2)} Cr</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Requested: {new Date(player.requestedAt || player.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleVerifyPlayer(player.id || player.playerId)}
-                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-green-500/30 transition-all"
-                    >
-                      ✅ Verify
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reason = prompt('Reason for rejection:');
-                        if (reason) handleRejectPlayer(player.id || player.playerId, reason);
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-red-500/30 transition-all"
-                    >
-                      ❌ Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-gray-50 dark:bg-[#1a2332] border border-gray-200 dark:border-cyan-900/30 rounded-2xl">
-              <div className="text-6xl mb-4">✅</div>
-              <p className="text-gray-600 dark:text-gray-400 text-lg font-semibold">All players verified!</p>
-              <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">No pending verification requests</p>
             </div>
           )}
         </div>

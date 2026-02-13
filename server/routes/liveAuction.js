@@ -8,7 +8,16 @@
 
 import express from 'express';
 import { liveAuctionEngine, LiveAuctionState } from '../liveAuctionEngine.js';
-import { fileStore } from '../fileStore.js';
+import { 
+  getLiveSessionsBySport, 
+  createLiveSession, 
+  updateLiveSession,
+  getFranchisesBySport,
+  getPlayersBySport,
+  getPlayerById,
+  getAuctionById,
+  updateAuction
+} from '../dataStore.js';
 
 const router = express.Router();
 
@@ -49,7 +58,7 @@ const requireAuctioneer = (req, res, next) => {
  */
 router.get('/state', async (req, res) => {
   try {
-    const state = liveAuctionEngine.getState();
+    const state = await liveAuctionEngine.getState();
     
     // If there's an active session, fetch additional data
     let teams = [];
@@ -57,20 +66,21 @@ router.get('/state', async (req, res) => {
     
     if (state.session) {
       // Fetch teams
-      const teamsFile = `data/${state.session.sport}/franchises.json`;
       try {
-        const allTeams = await fileStore.readJSON(teamsFile);
+        console.log(`📊 [FIRESTORE] Loading franchises for sport: ${state.session.sport}`);
+        const allTeams = await getFranchisesBySport(state.session.sport);
         teams = allTeams.filter(t => state.session.teamIds.includes(t.id));
+        console.log(`✅ [FIRESTORE] Loaded ${teams.length} franchises for session`);
       } catch (err) {
         teams = [];
       }
       
       // Fetch current player if ledger exists
       if (state.ledger) {
-        const playersFile = `data/${state.session.sport}/players.json`;
         try {
-          const players = await fileStore.readJSON(playersFile);
-          currentPlayer = players.find(p => p.id === state.ledger.playerId) || null;
+          console.log(`🎯 [FIRESTORE] Loading current player: ${state.ledger.playerId}`);
+          currentPlayer = await getPlayerById(state.ledger.playerId);
+          console.log(`✅ [FIRESTORE] Current player loaded: ${currentPlayer?.name || 'Not found'}`);
         } catch (err) {
           currentPlayer = null;
         }
@@ -163,15 +173,12 @@ router.post('/start', requireAuctioneer, async (req, res) => {
     } = req.body;
     
     let auctionData = null;
-    let auctionFilePath = null;
-    let auctions = [];
     
     // NEW FLOW: Load pre-created auction by ID
     if (auctionId && sport) {
-      auctionFilePath = `data/${sport}/auctions.json`;
       try {
-        auctions = await fileStore.readJSON(auctionFilePath);
-        auctionData = auctions.find(a => a.id === auctionId);
+        console.log(`🎪 [FIRESTORE] Loading auction by ID: ${auctionId}`);
+        auctionData = await getAuctionById(auctionId);
         
         if (!auctionData) {
           return res.status(404).json({ 
@@ -179,10 +186,11 @@ router.post('/start', requireAuctioneer, async (req, res) => {
             error: 'Auction not found. Make sure the auction was created by admin.' 
           });
         }
+        console.log(`✅ [FIRESTORE] Auction loaded: ${auctionData.name}, status: ${auctionData.status}`);
       } catch (err) {
         return res.status(404).json({ 
           success: false, 
-          error: 'Could not load auctions data.' 
+          error: 'Could not load auction data.' 
         });
       }
     }
@@ -205,13 +213,17 @@ router.post('/start', requireAuctioneer, async (req, res) => {
     }
     
     // If using pre-created auction, update its status to LIVE
-    if (auctionData && auctionFilePath) {
-      const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-      if (auctionIndex !== -1) {
-        auctions[auctionIndex].status = 'LIVE';
-        auctions[auctionIndex].liveSessionStartedAt = new Date().toISOString();
-        auctions[auctionIndex].liveSessionStartedBy = req.auctioneerId;
-        await fileStore.writeJSON(auctionFilePath, auctions);
+    if (auctionData) {
+      try {
+        console.log(`🔴 [FIRESTORE] Updating auction ${auctionId} status to LIVE`);
+        await updateAuction(auctionId, {
+          status: 'LIVE',
+          liveSessionStartedAt: new Date().toISOString(),
+          liveSessionStartedBy: req.auctioneerId
+        });
+        console.log(`✅ [FIRESTORE] Auction ${auctionId} marked as LIVE`);
+      } catch (err) {
+        console.error('Failed to update auction status to LIVE:', err);
       }
     }
     

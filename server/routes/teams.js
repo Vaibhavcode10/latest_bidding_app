@@ -1,17 +1,20 @@
 import express from 'express';
-import { fileStore } from '../fileStore.js';
+import { 
+  getFranchisesBySport, 
+  createFranchise, 
+  updateFranchise,
+  deleteFranchise 
+} from '../dataStore.js';
 
 const router = express.Router();
-
-const getFilePath = (sport) => `data/${sport}/franchises.json`;
 
 // Get all teams for a sport
 router.get('/:sport', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    const teams = await fileStore.readJSON(filePath);
+    const teams = await getFranchisesBySport(req.params.sport);
     res.json(teams);
   } catch (err) {
+    console.error('Error getting teams:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -19,22 +22,19 @@ router.get('/:sport', async (req, res) => {
 // Add new team to a sport
 router.post('/:sport', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    const teams = await fileStore.readJSON(filePath);
-    const sportPrefix = req.params.sport.substring(0, 2).toLowerCase();
+    const sport = req.params.sport;
     const newTeam = {
       ...req.body,
-      id: `${sportPrefix}_t${Date.now()}`,
-      sport: req.params.sport,
+      sport,
       playerIds: [],
       playerCount: 0,
-      wins: 0,
-      losses: 0
+      createdAt: new Date().toISOString()
     };
-    teams.push(newTeam);
-    await fileStore.writeJSON(filePath, teams);
-    res.status(201).json(newTeam);
+    
+    const createdTeam = await createFranchise(newTeam);
+    res.status(201).json(createdTeam);
   } catch (err) {
+    console.error('Error creating team:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -42,12 +42,15 @@ router.post('/:sport', async (req, res) => {
 // Update team
 router.put('/:sport/:id', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    let teams = await fileStore.readJSON(filePath);
-    teams = teams.map(t => t.id === req.params.id ? { ...t, ...req.body } : t);
-    await fileStore.writeJSON(filePath, teams);
-    res.json({ success: true });
+    const updatedTeam = await updateFranchise(req.params.id, req.body);
+    
+    if (!updatedTeam) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+    
+    res.json({ success: true, team: updatedTeam });
   } catch (err) {
+    console.error('Error updating team:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -55,12 +58,10 @@ router.put('/:sport/:id', async (req, res) => {
 // Delete team
 router.delete('/:sport/:id', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    let teams = await fileStore.readJSON(filePath);
-    teams = teams.filter(t => t.id !== req.params.id);
-    await fileStore.writeJSON(filePath, teams);
+    await deleteFranchise(req.params.id);
     res.json({ success: true });
   } catch (err) {
+    console.error('Error deleting team:', err);
     res.status(500).json({ error: err.message });
   }
 });

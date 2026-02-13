@@ -1,45 +1,44 @@
 import express from 'express';
-import { fileStore } from '../fileStore.js';
+import { 
+  getPlayersBySport, 
+  createPlayer, 
+  updatePlayer,
+  getPlayerById,
+  deletePlayer,
+  deleteUser,
+  createHistoryEntry,
+  getFranchisesBySport,
+  updateFranchise,
+  createUser,
+  getUserByUsername,
+  getUserByEmail
+} from '../dataStore.js';
 
 const router = express.Router();
 
 // History logging helper function
 const logHistoryAction = async (action, details) => {
   try {
-    const historyFilePath = 'data/history.json';
-    let history = [];
-    
-    try {
-      history = await fileStore.readJSON(historyFilePath);
-    } catch (err) {
-      history = [];
-    }
-    
     const historyEntry = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
+
       action,
       ...details
     };
     
-    history.unshift(historyEntry);
-    await fileStore.writeJSON(historyFilePath, history);
+    await createHistoryEntry(historyEntry);
     console.log('✅ History action logged:', action, details);
   } catch (err) {
     console.error('❌ Error logging history action:', err);
   }
 };
 
-const getFilePath = (sport) => `data/${sport}/players.json`;
-
 // Get all players for a sport or current player only
 router.get('/:sport', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    const players = await fileStore.readJSON(filePath);
+    const players = await getPlayersBySport(req.params.sport);
     
     // Check if this is a player-only request (via query parameter or authorization)
-    const { userId, userRole, verified } = req.query;
+    const { userId, userRole } = req.query;
     
     if (userRole === 'player' && userId) {
       // Return only the logged-in player's data
@@ -49,15 +48,12 @@ router.get('/:sport', async (req, res) => {
       } else {
         res.json([]);
       }
-    } else if (verified === 'true') {
-      // Return only verified players (for auctions)
-      const verifiedPlayers = players.filter(p => p.verified === true);
-      res.json(verifiedPlayers);
     } else {
-      // Return all players (for admin view)
+      // Return all players (for admin/auctioneer view)
       res.json(players);
     }
   } catch (err) {
+    console.error('Error getting players:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -65,22 +61,80 @@ router.get('/:sport', async (req, res) => {
 // Add new player to a sport
 router.post('/:sport', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    const players = await fileStore.readJSON(filePath);
-    const sportPrefix = req.params.sport.substring(0, 2).toLowerCase();
+    const { name, username, email, password } = req.body;
+    const sport = req.params.sport;
+    
+    // Validate required fields for login
+    if (!name || !username || !email || !password) {
+      return res.status(400).json({ 
+        error: 'Name, username, email, and password are required for player creation' 
+      });
+    }
+    
+    // Check if username or email already exists
+    const existingUserByUsername = await getUserByUsername(username);
+    if (existingUserByUsername) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    
+    const existingUserByEmail = await getUserByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    
+    // Create user record for authentication
+    const userData = {
+      username,
+      email,
+      name,
+      password,
+      role: 'player',
+      sport
+    };
+    
+    const createdUser = await createUser(userData);
+    
+    // Create player record with default values - EXPLICIT FIELD MAPPING
     const newPlayer = {
-      ...req.body,
-      id: `${sportPrefix}_p${Date.now()}`,
-      sport: req.params.sport,
+      name: name,
+      sport: sport,
+      role: 'all-rounder',
+      basePrice: 30000000,  // 30M raw = 3 CR (auction system format)
       currentBid: 0,
       status: 'AVAILABLE',
       auctionPrice: null,
-      soldTo: null
+      soldTo: null,
+      imageUrl: null,
+      userId: createdUser.id
     };
-    players.push(newPlayer);
-    await fileStore.writeJSON(filePath, players);
-    res.status(201).json(newPlayer);
+    
+    console.log('🏏 [PLAYER_CREATION] Creating player:', {
+      name: newPlayer.name,
+      basePrice: newPlayer.basePrice,
+      basePriceIsNumber: typeof newPlayer.basePrice === 'number',
+      allFields: Object.keys(newPlayer)
+    });
+    
+    const createdPlayer = await createPlayer(newPlayer);
+    
+    console.log('✅ [PLAYER_CREATED] Response will include:', {
+      playerId: createdPlayer.id,
+      name: createdPlayer.name,
+      basePrice: createdPlayer.basePrice,
+      hasBasePrice: 'basePrice' in createdPlayer
+    });
+    
+    // Return both user and player data (but no password)
+    const { password: _, ...safeUserData } = createdUser;
+    
+    res.status(201).json({
+      success: true,
+      message: 'Player created successfully and can now log in',
+      user: safeUserData,
+      player: createdPlayer
+    });
   } catch (err) {
+    console.error('Error creating player:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -88,12 +142,15 @@ router.post('/:sport', async (req, res) => {
 // Update player
 router.put('/:sport/:id', async (req, res) => {
   try {
-    const filePath = getFilePath(req.params.sport);
-    let players = await fileStore.readJSON(filePath);
-    players = players.map(p => p.id === req.params.id ? { ...p, ...req.body } : p);
-    await fileStore.writeJSON(filePath, players);
-    res.json({ success: true });
+    const updatedPlayer = await updatePlayer(req.params.id, req.body);
+    
+    if (!updatedPlayer) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    
+    res.json({ success: true, player: updatedPlayer });
   } catch (err) {
+    console.error('Error updating player:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -104,34 +161,46 @@ router.delete('/:sport/:id', async (req, res) => {
     const { sport, id } = req.params;
     const { userId, userRole } = req.query;
 
+    console.log(`🗑️ Delete request: sport=${sport}, playerId=${id}, userId=${userId}, userRole=${userRole}`);
+
     // Validate required parameters
     if (!userId || !userRole) {
+      console.log('❌ Missing authentication parameters');
       return res.status(400).json({ 
         success: false, 
         error: 'User authentication required' 
       });
     }
 
-    const playersFilePath = getFilePath(sport);
-    const franchisesFilePath = `data/${sport}/franchises.json`;
-    
-    let players = await fileStore.readJSON(playersFilePath);
-    let franchises = await fileStore.readJSON(franchisesFilePath);
-    
     // Find the player to be deleted
-    const playerToDelete = players.find(p => p.id === id);
+    const playerToDelete = await getPlayerById(id);
     if (!playerToDelete) {
+      console.log(`❌ Player not found: ${id}`);
       return res.status(404).json({ 
         success: false, 
         error: 'Player not found' 
       });
     }
 
+    console.log(`🔍 Found player to delete:`, playerToDelete.name);
+
+    // Verify sport matches
+    if (playerToDelete.sport !== sport) {
+      console.log(`❌ Sport mismatch: player sport=${playerToDelete.sport}, requested sport=${sport}`);
+      return res.status(400).json({
+        success: false,
+        error: 'Player sport mismatch'
+      });
+    }
+
+    let franchises = await getFranchisesBySport(sport);
+
     // If auctioneer, verify ownership
     if (userRole === 'auctioneer') {
       // Find auctioneer's franchise
       const auctioneerFranchise = franchises.find(f => f.auctioneerId === userId);
       if (!auctioneerFranchise) {
+        console.log(`❌ No franchise found for auctioneer: ${userId}`);
         return res.status(403).json({ 
           success: false, 
           error: 'No franchise found for auctioneer' 
@@ -140,6 +209,7 @@ router.delete('/:sport/:id', async (req, res) => {
 
       // Check if player belongs to auctioneer's team
       if (!auctioneerFranchise.playerIds.includes(id)) {
+        console.log(`❌ Player not in auctioneer's team`);
         return res.status(403).json({ 
           success: false, 
           error: 'You can only delete players from your own team' 
@@ -147,39 +217,54 @@ router.delete('/:sport/:id', async (req, res) => {
       }
 
       // Remove player from franchise
-      auctioneerFranchise.playerIds = auctioneerFranchise.playerIds.filter(playerId => playerId !== id);
-      auctioneerFranchise.playerCount = Math.max(0, (auctioneerFranchise.playerCount || 0) - 1);
+      const updatedPlayerIds = auctioneerFranchise.playerIds.filter(playerId => playerId !== id);
+      const updatedPlayerCount = Math.max(0, (auctioneerFranchise.playerCount || 0) - 1);
+      let updatedPurse = auctioneerFranchise.purseRemaining || 0;
       
       // If player was sold, add their price back to purse
       if (playerToDelete.soldPrice && playerToDelete.soldTo === auctioneerFranchise.id) {
-        auctioneerFranchise.purseRemaining = (auctioneerFranchise.purseRemaining || 0) + playerToDelete.soldPrice;
+        updatedPurse += playerToDelete.soldPrice;
       }
+
+      await updateFranchise(auctioneerFranchise.id, {
+        playerIds: updatedPlayerIds,
+        playerCount: updatedPlayerCount,
+        purseRemaining: updatedPurse
+      });
+      console.log(`✅ Updated franchise for auctioneer`);
     }
-    // Admin can delete any player (existing behavior preserved)
+    // Admin can delete any player
     else if (userRole === 'admin') {
+      console.log(`🔑 Admin delete - removing player from all franchises`);
       // Remove player from all franchises that might own them
-      franchises.forEach(franchise => {
+      for (const franchise of franchises) {
         if (franchise.playerIds && franchise.playerIds.includes(id)) {
-          franchise.playerIds = franchise.playerIds.filter(playerId => playerId !== id);
-          franchise.playerCount = Math.max(0, (franchise.playerCount || 0) - 1);
+          const updatedPlayerIds = franchise.playerIds.filter(playerId => playerId !== id);
+          const updatedPlayerCount = Math.max(0, (franchise.playerCount || 0) - 1);
+          let updatedPurse = franchise.purseRemaining || 0;
           
           // If player was sold, add their price back to purse
           if (playerToDelete.soldPrice && playerToDelete.soldTo === franchise.id) {
-            franchise.purseRemaining = (franchise.purseRemaining || 0) + playerToDelete.soldPrice;
+            updatedPurse += playerToDelete.soldPrice;
           }
+
+          await updateFranchise(franchise.id, {
+            playerIds: updatedPlayerIds,
+            playerCount: updatedPlayerCount,
+            purseRemaining: updatedPurse
+          });
+          console.log(`✅ Updated franchise: ${franchise.name}`);
         }
-      });
+      }
     }
     // Other roles cannot delete players
     else {
+      console.log(`❌ Insufficient permissions for role: ${userRole}`);
       return res.status(403).json({ 
         success: false, 
         error: 'Insufficient permissions to delete players' 
       });
     }
-
-    // Remove player from players array
-    players = players.filter(p => p.id !== id);
 
     // Log history action
     await logHistoryAction('PLAYER_DELETION', {
@@ -188,24 +273,37 @@ router.delete('/:sport/:id', async (req, res) => {
       playerName: playerToDelete.name,
       deletedBy: userId,
       deletedByRole: userRole,
-      role: playerToDelete.role,
+      role: playerToDelete.playerRole || playerToDelete.role,
       basePrice: playerToDelete.basePrice,
       soldPrice: playerToDelete.soldPrice || null,
       soldTo: playerToDelete.soldTo || null,
       verified: playerToDelete.verified || false
     });
+    console.log(`📝 Logged deletion history`);
 
-    // Save both files
-    await fileStore.writeJSON(playersFilePath, players);
-    await fileStore.writeJSON(franchisesFilePath, franchises);
+    // Delete the player record
+    await deletePlayer(id);
+    console.log(`🗑️ Deleted player record`);
+    
+    // If player has a linked user ID, delete the user record too
+    if (playerToDelete.userId) {
+      try {
+        await deleteUser(playerToDelete.userId);
+        console.log(`🗑️ Deleted linked user record: ${playerToDelete.userId}`);
+      } catch (userDeleteError) {
+        console.log(`⚠️ Warning: Could not delete user record ${playerToDelete.userId}:`, userDeleteError.message);
+        // Don't fail the whole operation if user deletion fails
+      }
+    }
 
+    console.log(`✅ Player deletion completed: ${playerToDelete.name}`);
     res.json({ 
       success: true, 
       message: 'Player deleted successfully',
       deletedPlayer: playerToDelete.name 
     });
   } catch (err) {
-    console.error('Delete player error:', err);
+    console.error('❌ Delete player error:', err);
     res.status(500).json({ 
       success: false, 
       error: err.message 

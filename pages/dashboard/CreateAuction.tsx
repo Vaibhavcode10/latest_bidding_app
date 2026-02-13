@@ -76,7 +76,7 @@ export const CreateAuction: React.FC = () => {
 
   const fetchVerifiedPlayers = async () => {
     try {
-      const response = await api.get(`/players/${selectedSport}?verified=true`);
+      const response = await api.get(`/players/${selectedSport}`);
       const availablePlayers = (response.data || []).filter(
         (p: any) => p.status === 'AVAILABLE' || !p.status
       );

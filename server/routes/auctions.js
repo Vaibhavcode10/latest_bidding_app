@@ -1,32 +1,25 @@
 import express from 'express';
-import { fileStore } from '../fileStore.js';
+import { 
+  createHistoryEntry,
+  getAuctionsBySport,
+  createAuction,
+  updateAuction,
+  deleteAuction,
+  getAuctionById,
+  getUsersByRoleAndSport
+} from '../dataStore.js';
 
 const router = express.Router();
-
-// Helper function to get auctions file path
-const getAuctionsFilePath = (sport) => `data/${sport}/auctions.json`;
 
 // Helper function to log history
 const logHistoryAction = async (action, details) => {
   try {
-    const historyFilePath = 'data/history.json';
-    let history = [];
-    
-    try {
-      history = await fileStore.readJSON(historyFilePath);
-    } catch (err) {
-      history = [];
-    }
-    
     const historyEntry = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
       action,
       ...details
     };
     
-    history.unshift(historyEntry);
-    await fileStore.writeJSON(historyFilePath, history);
+    await createHistoryEntry(historyEntry);
     console.log('✅ History action logged:', action);
   } catch (err) {
     console.error('❌ Error logging history action:', err);
@@ -41,10 +34,10 @@ router.get('/all/sports', async (req, res) => {
     
     for (const sport of sports) {
       try {
-        const auctions = await fileStore.readJSON(getAuctionsFilePath(sport));
+        const auctions = await getAuctionsBySport(sport);
         allAuctions = [...allAuctions, ...auctions];
       } catch (err) {
-        // Skip if no auctions file for this sport
+        // Skip if no auctions for this sport
       }
     }
     
@@ -62,7 +55,7 @@ router.get('/all/sports', async (req, res) => {
 });
 
 // GET all auctioneers for admin (to assign to auctions) - MUST BE BEFORE /:sport
-// NOTE: Auctioneers are NEUTRAL - they don't own or represent any team/franchise
+// NOTE: Auctioneers are NEUTRAL - they don't own or represent any team/franchise  
 router.get('/auctioneers/all/:sport', async (req, res) => {
   try {
     const { sport } = req.params;
@@ -73,13 +66,7 @@ router.get('/auctioneers/all/:sport', async (req, res) => {
     }
     
     // Get auctioneers (neutral people who conduct auctions)
-    const auctioneersFilePath = `data/${sport}/auctioneers.json`;
-    let auctioneers = [];
-    try {
-      auctioneers = await fileStore.readJSON(auctioneersFilePath);
-    } catch (err) {
-      auctioneers = [];
-    }
+    const auctioneers = await getUsersByRoleAndSport('auctioneer', sport);
     
     // Return auctioneers - they are neutral, no franchise association
     const auctioneersList = auctioneers.map(auctioneer => ({
@@ -110,7 +97,7 @@ router.get('/assigned/:auctioneerId', async (req, res) => {
     
     for (const sport of sports) {
       try {
-        const auctions = await fileStore.readJSON(getAuctionsFilePath(sport));
+        const auctions = await getAuctionsBySport(sport);
         for (const auction of auctions) {
           // Check direct assignment
           if (auction.assignedAuctioneer?.id === auctioneerId) {
@@ -121,7 +108,7 @@ router.get('/assigned/:auctioneerId', async (req, res) => {
           }
         }
       } catch (err) {
-        // Skip if no auctions file
+        // Skip if no auctions for this sport
       }
     }
     
@@ -143,15 +130,8 @@ router.get('/assigned/:auctioneerId', async (req, res) => {
 router.get('/:sport', async (req, res) => {
   try {
     const { sport } = req.params;
-    const auctionsFilePath = getAuctionsFilePath(sport);
     
-    let auctions = [];
-    try {
-      auctions = await fileStore.readJSON(auctionsFilePath);
-    } catch (err) {
-      // No auctions file exists
-      auctions = [];
-    }
+    const auctions = await getAuctionsBySport(sport);
     
     res.json({
       success: true,
@@ -167,10 +147,8 @@ router.get('/:sport', async (req, res) => {
 router.get('/:sport/:auctionId', async (req, res) => {
   try {
     const { sport, auctionId } = req.params;
-    const auctionsFilePath = getAuctionsFilePath(sport);
     
-    const auctions = await fileStore.readJSON(auctionsFilePath);
-    const auction = auctions.find(a => a.id === auctionId);
+    const auction = await getAuctionById(auctionId);
     
     if (!auction) {
       return res.status(404).json({ success: false, error: 'Auction not found' });
@@ -212,14 +190,10 @@ router.post('/:sport', async (req, res) => {
     if (userRole !== 'admin') {
       return res.status(403).json({ success: false, error: 'Only admin can create auctions' });
     }
-    
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    
-    let auctions = [];
-    try {
-      auctions = await fileStore.readJSON(auctionsFilePath);
-    } catch (err) {
-      auctions = [];
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'Auction name is required' });
     }
     
     // Default bid slabs if not provided
@@ -230,17 +204,15 @@ router.post('/:sport', async (req, res) => {
     ];
     
     const newAuction = {
-      id: `auction_${sport.substring(0, 2)}_${Date.now()}`,
-      name,
-      sport,
+      name: name || 'Untitled Auction',
+      sport: sport || 'football',
       description: description || '',
       logoUrl: logoUrl || '',
-      startDate,
-      endDate,
+      startDate: startDate || new Date().toISOString().split('T')[0],
+      endDate: endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
       // New status model: CREATED -> READY (when fully configured) -> LIVE -> COMPLETED
       status: 'CREATED',
-      createdBy: userId,
-      createdAt: new Date().toISOString(),
+      createdBy: userId || 'system',
       
       // Legacy fields for invitations (backward compatibility)
       invitedAuctioneers: [],
@@ -252,7 +224,7 @@ router.post('/:sport', async (req, res) => {
         id: assignedAuctioneerId,
         name: assignedAuctioneerName || 'Unknown',
         assignedAt: new Date().toISOString(),
-        assignedBy: userId
+        assignedBy: userId || 'system'
       } : null,
       
       // NEW: Participating teams (replaces teamIds for better structure)
@@ -279,23 +251,22 @@ router.post('/:sport', async (req, res) => {
       newAuction.status = 'READY';
     }
     
-    auctions.push(newAuction);
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const createdAuction = await createAuction(newAuction);
     
     // Log history
     await logHistoryAction('AUCTION_CREATED', {
       sport,
-      auctionId: newAuction.id,
-      auctionName: newAuction.name,
+      auctionId: createdAuction.id,
+      auctionName: createdAuction.name,
       createdBy: userId,
-      status: newAuction.status,
-      assignedAuctioneerId: newAuction.assignedAuctioneer?.id
+      status: createdAuction.status,
+      assignedAuctioneerId: createdAuction.assignedAuctioneer?.id
     });
     
     res.json({
       success: true,
       message: 'Auction created successfully',
-      auction: newAuction
+      auction: createdAuction
     });
   } catch (err) {
     console.error('Create auction error:', err);
@@ -314,26 +285,18 @@ router.put('/:sport/:auctionId/teams', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only auctioneer can update team purses during live auction' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-    if (auctionIndex === -1) {
-      return res.status(404).json({ success: false, error: 'Auction not found' });
-    }
-    
     // Update participating teams (purse changes)
+    const updates = {};
     if (participatingTeams) {
-      auctions[auctionIndex].participatingTeams = participatingTeams;
+      updates.participatingTeams = participatingTeams;
     }
-    auctions[auctionIndex].updatedAt = new Date().toISOString();
     
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const updatedAuction = await updateAuction(auctionId, updates);
     
     res.json({
       success: true,
       message: 'Team purses updated',
-      auction: auctions[auctionIndex]
+      auction: updatedAuction
     });
   } catch (err) {
     console.error('Update team purses error:', err);
@@ -352,31 +315,26 @@ router.put('/:sport/:auctionId', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only admin can update auctions' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-    if (auctionIndex === -1) {
-      return res.status(404).json({ success: false, error: 'Auction not found' });
+    // Build updates object
+    const updates = { updatedBy: userId };
+    if (name) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (startDate) updates.startDate = startDate;
+    if (endDate) updates.endDate = endDate;
+    if (status) updates.status = status;
+    if (settings) {
+      // Need to get existing auction first to merge settings
+      const existingAuction = await getAuctionById(auctionId);
+      updates.settings = { ...existingAuction?.settings, ...settings };
     }
     
-    // Update fields
-    if (name) auctions[auctionIndex].name = name;
-    if (description !== undefined) auctions[auctionIndex].description = description;
-    if (startDate) auctions[auctionIndex].startDate = startDate;
-    if (endDate) auctions[auctionIndex].endDate = endDate;
-    if (status) auctions[auctionIndex].status = status;
-    if (settings) auctions[auctionIndex].settings = { ...auctions[auctionIndex].settings, ...settings };
-    auctions[auctionIndex].updatedAt = new Date().toISOString();
-    auctions[auctionIndex].updatedBy = userId;
-    
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const updatedAuction = await updateAuction(auctionId, updates);
     
     // Log history
     await logHistoryAction('AUCTION_UPDATED', {
       sport,
       auctionId,
-      auctionName: auctions[auctionIndex].name,
+      auctionName: updatedAuction.name,
       updatedBy: userId,
       changes: { name, description, startDate, endDate, status }
     });
@@ -384,7 +342,7 @@ router.put('/:sport/:auctionId', async (req, res) => {
     res.json({
       success: true,
       message: 'Auction updated successfully',
-      auction: auctions[auctionIndex]
+      auction: updatedAuction
     });
   } catch (err) {
     console.error('Update auction error:', err);
@@ -403,16 +361,7 @@ router.delete('/:sport/:auctionId', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only admin can delete auctions' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionToDelete = auctions.find(a => a.id === auctionId);
-    if (!auctionToDelete) {
-      return res.status(404).json({ success: false, error: 'Auction not found' });
-    }
-    
-    auctions = auctions.filter(a => a.id !== auctionId);
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const auctionToDelete = await deleteAuction(auctionId);
     
     // Log history
     await logHistoryAction('AUCTION_DELETED', {
@@ -451,41 +400,39 @@ router.post('/:sport/:auctionId/assign-auctioneer', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Auctioneer ID and name are required' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-    if (auctionIndex === -1) {
+    // Get existing auction first
+    const existingAuction = await getAuctionById(auctionId);
+    if (!existingAuction) {
       return res.status(404).json({ success: false, error: 'Auction not found' });
     }
     
     // Cannot reassign if auction is already LIVE or COMPLETED
-    if (['LIVE', 'COMPLETED'].includes(auctions[auctionIndex].status)) {
+    if (['LIVE', 'COMPLETED'].includes(existingAuction.status)) {
       return res.status(400).json({ success: false, error: 'Cannot reassign auctioneer for live or completed auction' });
     }
     
-    // Assign auctioneer
-    auctions[auctionIndex].assignedAuctioneer = {
-      id: auctioneerId,
-      name: auctioneerName,
-      assignedAt: new Date().toISOString(),
-      assignedBy: userId
+    // Build updates
+    const updates = {
+      assignedAuctioneer: {
+        id: auctioneerId,
+        name: auctioneerName,
+        assignedAt: new Date().toISOString(),
+        assignedBy: userId
+      }
     };
     
     // Check if auction is now fully configured (has teams and players too)
-    const auction = auctions[auctionIndex];
-    if (auction.teamIds?.length > 0 && auction.playerPool?.length > 0) {
-      auction.status = 'READY';
+    if (existingAuction.teamIds?.length > 0 && existingAuction.playerPool?.length > 0) {
+      updates.status = 'READY';
     }
     
-    auctions[auctionIndex].updatedAt = new Date().toISOString();
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const updatedAuction = await updateAuction(auctionId, updates);
     
     // Log history
     await logHistoryAction('AUCTIONEER_ASSIGNED', {
       sport,
       auctionId,
-      auctionName: auctions[auctionIndex].name,
+      auctionName: updatedAuction.name,
       auctioneerId,
       auctioneerName,
       assignedBy: userId
@@ -494,7 +441,7 @@ router.post('/:sport/:auctionId/assign-auctioneer', async (req, res) => {
     res.json({
       success: true,
       message: `${auctioneerName} assigned to auction successfully`,
-      auction: auctions[auctionIndex]
+      auction: updatedAuction
     });
   } catch (err) {
     console.error('Assign auctioneer error:', err);
@@ -513,50 +460,48 @@ router.post('/:sport/:auctionId/configure', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only admin can configure auctions' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-    if (auctionIndex === -1) {
+    // Get existing auction first
+    const existingAuction = await getAuctionById(auctionId);
+    if (!existingAuction) {
       return res.status(404).json({ success: false, error: 'Auction not found' });
     }
     
     // Cannot configure if auction is already LIVE or COMPLETED
-    if (['LIVE', 'COMPLETED'].includes(auctions[auctionIndex].status)) {
+    if (['LIVE', 'COMPLETED'].includes(existingAuction.status)) {
       return res.status(400).json({ success: false, error: 'Cannot configure live or completed auction' });
     }
     
-    // Update configuration
-    if (teamIds) auctions[auctionIndex].teamIds = teamIds;
-    if (playerPool) auctions[auctionIndex].playerPool = playerPool;
-    if (bidSlabs) auctions[auctionIndex].bidSlabs = bidSlabs;
-    if (timerDuration !== undefined) auctions[auctionIndex].timerDuration = timerDuration;
+    // Build updates
+    const updates = {};
+    if (teamIds) updates.teamIds = teamIds;
+    if (playerPool) updates.playerPool = playerPool;
+    if (bidSlabs) updates.bidSlabs = bidSlabs;
+    if (timerDuration !== undefined) updates.timerDuration = timerDuration;
     
     // Check if auction is now fully configured
-    const auction = auctions[auctionIndex];
-    if (auction.assignedAuctioneer && 
-        auction.teamIds?.length > 0 && 
-        auction.playerPool?.length > 0) {
-      auction.status = 'READY';
+    const mergedAuction = { ...existingAuction, ...updates };
+    if (mergedAuction.assignedAuctioneer && 
+        mergedAuction.teamIds?.length > 0 && 
+        mergedAuction.playerPool?.length > 0) {
+      updates.status = 'READY';
     }
     
-    auctions[auctionIndex].updatedAt = new Date().toISOString();
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const updatedAuction = await updateAuction(auctionId, updates);
     
     // Log history
     await logHistoryAction('AUCTION_CONFIGURED', {
       sport,
       auctionId,
-      auctionName: auctions[auctionIndex].name,
+      auctionName: updatedAuction.name,
       configuredBy: userId,
-      teamCount: auction.teamIds?.length,
-      playerCount: auction.playerPool?.length
+      teamCount: updatedAuction.teamIds?.length,
+      playerCount: updatedAuction.playerPool?.length
     });
     
     res.json({
       success: true,
       message: 'Auction configured successfully',
-      auction: auctions[auctionIndex]
+      auction: updatedAuction
     });
   } catch (err) {
     console.error('Configure auction error:', err);
@@ -574,27 +519,30 @@ router.post('/:sport/:auctionId/register-player', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only players can register for auctions' });
     }
     
-    const auctionsFilePath = getAuctionsFilePath(sport);
-    let auctions = await fileStore.readJSON(auctionsFilePath);
-    
-    const auctionIndex = auctions.findIndex(a => a.id === auctionId);
-    if (auctionIndex === -1) {
+    // Get existing auction first
+    const existingAuction = await getAuctionById(auctionId);
+    if (!existingAuction) {
       return res.status(404).json({ success: false, error: 'Auction not found' });
     }
     
     // Check if already registered
-    if (auctions[auctionIndex].registeredPlayers.some(p => p.id === userId)) {
+    const registeredPlayers = existingAuction.registeredPlayers || [];
+    if (registeredPlayers.some(p => p.id === userId)) {
       return res.status(400).json({ success: false, error: 'Already registered for this auction' });
     }
     
     // Add player
-    auctions[auctionIndex].registeredPlayers.push({
+    const newRegisteredPlayer = {
       id: userId,
       name: userName,
       registeredAt: new Date().toISOString()
-    });
+    };
     
-    await fileStore.writeJSON(auctionsFilePath, auctions);
+    const updatedRegisteredPlayers = [...registeredPlayers, newRegisteredPlayer];
+    
+    await updateAuction(auctionId, { 
+      registeredPlayers: updatedRegisteredPlayers 
+    });
     
     res.json({
       success: true,

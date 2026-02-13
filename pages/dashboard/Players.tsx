@@ -8,13 +8,15 @@ interface Player {
   name: string;
   sport: string;
   role: string;
-  basePrice: number;
+  basePrice?: number;  // Made optional
   currentBid: number;
   status: string;
   careerRecords: any;
   auctionPrice: number | null;
   soldTo: string | null;
   username?: string;
+  email?: string;
+  imageUrl?: string;
   verified?: boolean;
   verificationRequestedAt?: string;
   verifiedAt?: string;
@@ -28,8 +30,9 @@ const Players: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    role: '',
-    basePrice: 0,
+    username: '',
+    email: '',
+    password: '',
   });
 
   // Use the user's selected sport instead of local state
@@ -54,34 +57,55 @@ const Players: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      await api.updateEntity('players', editingId, formData, sport);
+      // For editing, only update player-specific fields
+      const updateData = {
+        name: formData.name,
+      };
+      await api.updateEntity('players', editingId, updateData, sport);
     } else {
+      // For creating new player, send all required auth fields
       await api.createEntity('players', formData, sport);
     }
-    setFormData({ name: '', role: '', basePrice: 0 });
+    setFormData({ name: '', username: '', email: '', password: '' });
     setEditingId(null);
     setShowForm(false);
     fetchPlayers();
   };
 
   const handleEdit = (player: Player) => {
-    setFormData({ name: player.name, role: player.role, basePrice: player.basePrice });
+    setFormData({ 
+      name: player.name, 
+      username: '',  // Don't show existing auth data
+      email: '',
+      password: ''
+    });
     setEditingId(player.id);
     setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Delete this player?')) {
+    const playerName = players.find(p => p.id === id)?.name || 'player';
+    if (confirm(`Are you sure you want to delete ${playerName}? This will permanently remove both the player and their login account.`)) {
       const userContext = user ? {
         userId: user.id,
         userRole: user.role
       } : undefined;
       
-      const success = await api.deleteEntity('players', id, sport, userContext);
-      if (success) {
-        fetchPlayers();
-      } else {
-        alert('Failed to delete player. You may not have permission or the player may not belong to your team.');
+      console.log('🗑️ Attempting to delete player:', { id, playerName, userContext });
+      
+      try {
+        const success = await api.deleteEntity('players', id, sport, userContext);
+        if (success) {
+          console.log('✅ Player deleted successfully');
+          fetchPlayers();
+          alert(`${playerName} has been deleted successfully.`);
+        } else {
+          console.log('❌ Delete failed - API returned false');
+          alert(`Failed to delete ${playerName}. You may not have permission or there was a server error.`);
+        }
+      } catch (error) {
+        console.error('❌ Delete error:', error);
+        alert(`Failed to delete ${playerName}. Server error: ${error.message || 'Unknown error'}`);
       }
     }
   };
@@ -138,32 +162,57 @@ const Players: React.FC = () => {
             {editingId ? '✏️ Edit Player' : '⭐ Add New Player'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {!editingId && (
+              <>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                  🔐 Create Player Account
+                </h4>
+              </>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="text"
-                placeholder="Player Name"
+                placeholder="Player Name *"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
                 required
               />
-              <input
-                type="text"
-                placeholder="Role (e.g., Forward)"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Base Price"
-                value={formData.basePrice}
-                onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
-                className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                required
-              />
+              {!editingId && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Username *"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email *"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password *"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    required
+                    minLength={6}
+                  />
+                </>
+              )}
             </div>
+            {!editingId && (
+              <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                <strong>📌 Note:</strong> The player will be able to log in with these credentials and can update their profile details after logging in.
+              </div>
+            )}
             <button
               type="submit"
               className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:shadow-lg hover:shadow-blue-500/50 transition-all transform hover:scale-105"
@@ -214,7 +263,9 @@ const Players: React.FC = () => {
               <div className="space-y-2 mb-4 pb-4 border-b border-gray-200 dark:border-slate-700">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-slate-400 text-sm">Base Price</span>
-                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">${(player.basePrice / 1000000).toFixed(1)}M</span>
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {player.basePrice ? `₹${(player.basePrice / 10000000).toFixed(1)} CR` : '₹3 CR'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-slate-400 text-sm">Current Bid</span>
@@ -261,19 +312,6 @@ const Players: React.FC = () => {
                     {player.status === 'AVAILABLE' ? '🟢 AVAILABLE FOR AUCTION' : '🔴 SOLD'}
                   </span>
                 </div>
-                
-                {/* Verification Status Badge */}
-                {user?.role === 'admin' && (
-                  <div>
-                    <span className={`inline-block px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                      player.verified
-                        ? 'bg-gradient-to-r from-blue-500/30 to-cyan-500/30 text-blue-300 border border-blue-500/50'
-                        : 'bg-gradient-to-r from-orange-500/30 to-yellow-500/30 text-orange-300 border border-orange-500/50'
-                    }`}>
-                      {player.verified ? '✅ VERIFIED' : '⚠️ PENDING VERIFICATION'}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Actions (only for admins/auctioneers) */}
