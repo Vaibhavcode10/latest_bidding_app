@@ -2,7 +2,7 @@ import { db } from './firebase.js';
 import admin from 'firebase-admin';
 
 // Collection names following the new naming convention
-const COLLECTIONS = {
+export const COLLECTIONS = {
   USERS: 'sportbid_users',
   PLAYERS: 'sportbid_players',
   FRANCHISES: 'sportbid_franchises',
@@ -11,6 +11,9 @@ const COLLECTIONS = {
   BIDS: 'sportbid_bids',
   HISTORY: 'sportbid_history'
 };
+
+// Export db for transaction usage
+export { db };
 
 // Firestore transaction helper for atomic operations
 export const runTransaction = async (operation) => {

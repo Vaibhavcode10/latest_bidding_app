@@ -23,7 +23,9 @@ import {
   getLiveSessionById,
   getBidsByPlayer,
   createHistoryEntry,
-  updateAuction
+  updateAuction,
+  db,
+  COLLECTIONS
 } from './dataStore.js';
 import "./firebase.js";
 
@@ -83,6 +85,16 @@ function isValidBidAmount(amount, slabs = DEFAULT_BID_SLABS) {
 function calculateNextBid(currentBid, slabs = DEFAULT_BID_SLABS) {
   const increment = getIncrementForPrice(currentBid, slabs);
   return parseFloat((currentBid + increment).toFixed(2));
+}
+
+/**
+ * Calculate next bid capped by maximum available purse
+ * Prevents suggesting a bid that exceeds a team's remaining budget
+ */
+function calculateCappedNextBid(currentBid, maxBid, slabs = DEFAULT_BID_SLABS) {
+  const nextBid = calculateNextBid(currentBid, slabs);
+  // Cap to maxBid if nextBid exceeds it
+  return Math.min(nextBid, maxBid);
 }
 
 /**
@@ -654,11 +666,24 @@ const liveAuctionEngine = {
       updatedAt: new Date().toISOString()
     });
 
+    // Get bidding team's purse to cap next valid bid
+    let nextValidBid = calculateNextBid(newBidAmount, session.bidSlabs || DEFAULT_BID_SLABS);
+    try {
+      const biddingTeamFranchise = await getFranchiseById(teamId);
+      if (biddingTeamFranchise) {
+        const teamPurse = biddingTeamFranchise.purseRemaining ?? biddingTeamFranchise.totalPurse ?? 0;
+        nextValidBid = calculateCappedNextBid(newBidAmount, teamPurse, session.bidSlabs || DEFAULT_BID_SLABS);
+        console.log(`💰 Next bid capped to team's purse: ${nextValidBid} CR (Purse: ${teamPurse} CR)`);
+      }
+    } catch (err) {
+      console.warn('Could not fetch team purse for next bid cap:', err.message);
+    }
+
     return { 
       success: true, 
       session: await getLocalCurrentSession(),
       bidEntry: createdBid,
-      nextValidBid: calculateNextBid(newBidAmount, session.bidSlabs || DEFAULT_BID_SLABS)
+      nextValidBid
     };
   },
 
@@ -744,11 +769,24 @@ const liveAuctionEngine = {
       updatedAt: new Date().toISOString()
     });
 
+    // Get bidding team's purse to cap next valid bid
+    let nextValidBid = calculateNextBid(jumpAmount, bidSlabs);
+    try {
+      const biddingTeamFranchise = await getFranchiseById(teamId);
+      if (biddingTeamFranchise) {
+        const teamPurse = biddingTeamFranchise.purseRemaining ?? biddingTeamFranchise.totalPurse ?? 0;
+        nextValidBid = calculateCappedNextBid(jumpAmount, teamPurse, bidSlabs);
+        console.log(`💰 Next jump bid capped to team's purse: ${nextValidBid} CR (Purse: ${teamPurse} CR)`);
+      }
+    } catch (err) {
+      console.warn('Could not fetch team purse for next bid cap:', err.message);
+    }
+
     return { 
       success: true, 
       session: await getLocalCurrentSession(),
       bidEntry: createdBid,
-      nextValidBid: calculateNextBid(jumpAmount, bidSlabs)
+      nextValidBid
     };
   },
 
@@ -824,31 +862,53 @@ const liveAuctionEngine = {
     const winningTeam = session.highestBidder;
 
     try {
-      // Update player status
-      await updatePlayer(playerId, {
-        status: 'SOLD',
-        soldPrice: finalPrice,
-        soldTo: winningTeam.teamId,
-        auctionPrice: finalPrice
-      });
-
-      // Update franchise - add player and deduct purse
-      const franchises = await getFranchisesBySport(session.sport);
-      const winningFranchise = franchises.find(f => f.id === winningTeam.teamId);
-      
-      if (winningFranchise) {
-        const newPlayerIds = [...(winningFranchise.playerIds || []), playerId];
-        const newPurseRemaining = (winningFranchise.purseRemaining || winningFranchise.totalPurse || 0) - finalPrice;
-        const newPlayerCount = (winningFranchise.playerCount || 0) + 1;
-
-        await updateFranchise(winningTeam.teamId, {
+      // ATOMIC TRANSACTION: Update franchise purse and player status atomically
+      await db.runTransaction(async (transaction) => {
+        console.log(`⚡ [FIRESTORE TRANSACTION] Marking player ${playerId} as SOLD for ${finalPrice} CR`);
+        
+        // Read franchise document within transaction
+        const franchiseRef = db.collection(COLLECTIONS.FRANCHISES).doc(winningTeam.teamId);
+        const franchiseDoc = await transaction.get(franchiseRef);
+        
+        if (!franchiseDoc.exists) {
+          throw new Error(`Franchise ${winningTeam.teamId} not found`);
+        }
+        
+        const franchise = franchiseDoc.data();
+        const currentPurse = franchise.purseRemaining ?? franchise.totalPurse ?? 0;
+        
+        // Verify purseRemaining >= finalPrice WITHIN TRANSACTION
+        if (finalPrice > currentPurse) {
+          throw new Error(`Insufficient purse at finalization. Final price: ${finalPrice} CR, Available purse: ${currentPurse} CR`);
+        }
+        
+        // Calculate new purse and player list
+        const newPurseRemaining = currentPurse - finalPrice;
+        const newPlayerIds = [...(franchise.playerIds || []), playerId];
+        const newPlayerCount = (franchise.playerCount || 0) + 1;
+        
+        // Update franchise document - deduct purse and add player
+        transaction.update(franchiseRef, {
           playerIds: newPlayerIds,
           playerCount: newPlayerCount,
-          purseRemaining: newPurseRemaining
+          purseRemaining: newPurseRemaining,
+          updatedAt: new Date().toISOString()
         });
-      }
+        
+        // Update player document as SOLD
+        const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(playerId);
+        transaction.update(playerRef, {
+          status: 'SOLD',
+          soldPrice: finalPrice,
+          soldTo: winningTeam.teamId,
+          auctionPrice: finalPrice,
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log(`✅ [TRANSACTION COMMITTED] Player ${playerId} SOLD for ${finalPrice} CR. Franchise purse: ${currentPurse} → ${newPurseRemaining} CR`);
+      });
 
-      // Add to auction result history
+      // Add to auction result history (outside transaction for resilience)
       await addPlayerResult(
         playerId,
         session.currentPlayerName || 'Unknown',
@@ -886,7 +946,7 @@ const liveAuctionEngine = {
       };
     } catch (error) {
       console.error('Error marking player as sold:', error);
-      return { success: false, error: 'Failed to mark player as sold' };
+      return { success: false, error: error.message || 'Failed to mark player as sold' };
     }
   },
 
@@ -1032,10 +1092,24 @@ const liveAuctionEngine = {
     
     const currentBid = session.currentBid || session.basePrice;
     const bidSlabs = session.bidSlabs || DEFAULT_BID_SLABS;
+    let nextBid = calculateNextBid(currentBid, bidSlabs);
+    
+    // Cap next bid to highest bidder's purse
+    if (session.highestBidder) {
+      try {
+        const highestBidderFranchise = await getFranchiseById(session.highestBidder.teamId);
+        if (highestBidderFranchise) {
+          const teamPurse = highestBidderFranchise.purseRemaining ?? highestBidderFranchise.totalPurse ?? 0;
+          nextBid = calculateCappedNextBid(currentBid, teamPurse, bidSlabs);
+        }
+      } catch (err) {
+        console.warn('Could not fetch highest bidder purse for next bid cap:', err.message);
+      }
+    }
     
     return {
       currentBid,
-      nextBid: calculateNextBid(currentBid, bidSlabs),
+      nextBid,
       increment: getIncrementForPrice(currentBid, bidSlabs)
     };
   }

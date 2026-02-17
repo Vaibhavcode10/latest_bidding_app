@@ -219,7 +219,7 @@ router.delete('/:sport/:id', async (req, res) => {
       // Remove player from franchise
       const updatedPlayerIds = auctioneerFranchise.playerIds.filter(playerId => playerId !== id);
       const updatedPlayerCount = Math.max(0, (auctioneerFranchise.playerCount || 0) - 1);
-      let updatedPurse = auctioneerFranchise.purseRemaining || 0;
+      let updatedPurse = auctioneerFranchise.purseRemaining ?? 0;
       
       // If player was sold, add their price back to purse
       if (playerToDelete.soldPrice && playerToDelete.soldTo === auctioneerFranchise.id) {
@@ -241,7 +241,7 @@ router.delete('/:sport/:id', async (req, res) => {
         if (franchise.playerIds && franchise.playerIds.includes(id)) {
           const updatedPlayerIds = franchise.playerIds.filter(playerId => playerId !== id);
           const updatedPlayerCount = Math.max(0, (franchise.playerCount || 0) - 1);
-          let updatedPurse = franchise.purseRemaining || 0;
+          let updatedPurse = franchise.purseRemaining ?? 0;
           
           // If player was sold, add their price back to purse
           if (playerToDelete.soldPrice && playerToDelete.soldTo === franchise.id) {
