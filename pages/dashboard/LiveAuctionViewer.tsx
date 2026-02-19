@@ -3,6 +3,7 @@ import { useLiveAuction } from '../../context/LiveAuctionContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import type { BidEntry } from '../../types';
+import { formatPrice } from '../../utils/formatPrice';
 
 export const LiveAuctionViewer: React.FC = () => {
   const { user } = useAuth();
@@ -22,16 +23,6 @@ export const LiveAuctionViewer: React.FC = () => {
   const [selectedHistoryPlayerId, setSelectedHistoryPlayerId] = useState<string | null>(null);
   const [playerHistory, setPlayerHistory] = useState<BidEntry[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(2)} Cr`;
-    } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(2)} L`;
-    }
-    return `₹${amount.toLocaleString()}`;
-  };
 
   // Load player history
   const handleViewHistory = async (playerId: string) => {
@@ -100,7 +91,7 @@ export const LiveAuctionViewer: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="bg-gray-100 dark:bg-white/5 rounded-lg p-3">
                     <div className="text-gray-500 dark:text-gray-400">Base Price</div>
-                    <div className="text-green-600 dark:text-green-400 font-bold">{formatCurrency(ledger.basePrice)}</div>
+                    <div className="text-green-600 dark:text-green-400 font-bold">₹{formatPrice(ledger.basePrice)}</div>
                   </div>
                   <div className="bg-gray-100 dark:bg-white/5 rounded-lg p-3">
                     <div className="text-gray-500 dark:text-gray-400">Status</div>
@@ -140,7 +131,7 @@ export const LiveAuctionViewer: React.FC = () => {
                           {team.name}
                           {isLeading && <span className="ml-2">👑</span>}
                         </span>
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">{formatCurrency(team.purseRemaining)}</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">₹{formatPrice(team.purseRemaining)}</span>
                       </div>
                     </div>
                   );
@@ -180,7 +171,7 @@ export const LiveAuctionViewer: React.FC = () => {
                 <div className="text-center">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">CURRENT BID</div>
                   <div className="text-6xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-4">
-                    {formatCurrency(ledger.currentBid)}
+                    ₹{formatPrice(ledger.currentBid)}
                   </div>
 
                   {ledger.highestBidder ? (
@@ -227,7 +218,7 @@ export const LiveAuctionViewer: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-green-600 dark:text-green-400 font-bold">{formatCurrency(bid.bidAmount)}</div>
+                          <div className="text-green-600 dark:text-green-400 font-bold">₹{formatPrice(bid.bidAmount)}</div>
                           {bid.isJumpBid && (
                             <span className="text-xs text-purple-600 dark:text-purple-300">Jump</span>
                           )}

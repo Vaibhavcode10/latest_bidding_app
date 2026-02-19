@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface AuctionPlayer {
   id: string;
@@ -166,7 +167,7 @@ const BidEvents: React.FC = () => {
                           <div className="grid grid-cols-3 gap-4">
                             <div>
                               <p className="text-xs text-gray-500 dark:text-slate-500 mb-1">Base Price</p>
-                              <p className="text-gray-800 dark:text-white font-bold">₹{player.basePrice.toLocaleString()}</p>
+                              <p className="text-gray-800 dark:text-white font-bold">₹{formatPrice(player.basePrice)}</p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-500 dark:text-slate-500 mb-1">Current Bid</p>

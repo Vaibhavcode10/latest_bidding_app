@@ -24,6 +24,7 @@ const Login: React.FC = () => {
   const [name, setName] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
   const [selectedSport, setSelectedSport] = useState('football');
+  const [basePrice, setBasePrice] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [auctioneerAvailability, setAuctioneerAvailability] = useState<AuctioneerAvailability | null>(null);
@@ -88,7 +89,18 @@ const Login: React.FC = () => {
           throw new Error('Password must be at least 6 characters');
         }
         
-        await register(username, email, password, selectedRole, selectedSport, name);
+        // For players, validate base price
+        if (selectedRole === 'player') {
+          if (!basePrice) {
+            throw new Error('Base price is required for player registration');
+          }
+          const basePriceNum = Number(basePrice);
+          if (isNaN(basePriceNum) || basePriceNum <= 0) {
+            throw new Error('Base price must be a positive number');
+          }
+        }
+        
+        await register(username, email, password, selectedRole, selectedSport, name, selectedRole === 'player' ? Number(basePrice) : undefined);
         
         // Always redirect to teams page for sport selection after registration
         navigate('/teams');
@@ -119,6 +131,7 @@ const Login: React.FC = () => {
     setPassword('');
     setConfirmPassword('');
     setName('');
+    setBasePrice('');
     setError('');
   };
 
@@ -347,6 +360,25 @@ const Login: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
+            </div>
+          )}
+
+          {isRegisterMode && selectedRole === 'player' && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Base Price</label>
+              <input 
+                type="number" 
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                placeholder="Enter base price (e.g. 2000000, 20000, etc)"
+                value={basePrice}
+                onChange={(e) => setBasePrice(e.target.value)}
+                step="1"
+                min="0"
+                required
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Enter the starting bid amount as a number (no units like CR or Lakh)
+              </p>
             </div>
           )}
 

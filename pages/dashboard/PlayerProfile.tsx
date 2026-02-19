@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useBiddingRequest } from '../../context/BiddingRequestContext';
 import { BiddingRequestStatus } from '../../types';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface ProfileData {
   name: string;
@@ -345,7 +346,7 @@ const PlayerProfilePage: React.FC = () => {
                 <div className="bg-white dark:bg-gradient-to-r dark:from-slate-900/50 dark:to-slate-800/50 border border-gray-200 dark:border-blue-600/20 rounded-2xl p-6 backdrop-blur-xl shadow-sm">
                   <p className="text-gray-500 dark:text-slate-400 text-sm mb-2">Base Price</p>
                   <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                    {formData.basePrice > 0 ? `₹${formData.basePrice.toLocaleString()}` : displayValue(null)}
+                    {formData.basePrice > 0 ? `₹${formatPrice(formData.basePrice)}` : displayValue(null)}
                   </p>
                 </div>
               </div>

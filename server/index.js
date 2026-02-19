@@ -7,6 +7,8 @@ import verificationRouter from './routes/verification.js';
 import auctionsRouter from './routes/auctions.js';
 import liveAuctionRouter from './routes/liveAuction.js';
 import auctionHistoryRouter from './routes/auctionHistory.js';
+import seasonRoutes from './routes/seasonRoutes.js';
+import auctionRoutes from './routes/auctionRoutes.js';
 import * as auctioneersRouter from './routes/auctioneers.js';
 import { liveAuctionEngine } from './liveAuctionEngine.js';
 import "./firebase.js";
@@ -30,6 +32,8 @@ app.use('/api/verification', verificationRouter);
 app.use('/api/auctions', auctionsRouter);
 app.use('/api/live-auction', liveAuctionRouter);
 app.use('/api/auction-history', auctionHistoryRouter);
+app.use('/api/seasons', seasonRoutes);
+app.use('/api/auction-seasons', auctionRoutes);
 
 // Auctioneer routes
 app.post('/api/auctioneers/login', (req, res) => {

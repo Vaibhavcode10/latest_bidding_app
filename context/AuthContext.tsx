@@ -44,7 +44,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string, role: UserRole, sport?: string) => Promise<void>;
-  register: (username: string, email: string, password: string, role: UserRole, sport: string, name?: string) => Promise<void>;
+  register: (username: string, email: string, password: string, role: UserRole, sport: string, name?: string, basePrice?: number) => Promise<void>;
   logout: () => void;
   setSport: (sport: string) => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (username: string, email: string, password: string, role: UserRole, sport: string, name?: string) => {
+  const register = async (username: string, email: string, password: string, role: UserRole, sport: string, name?: string, basePrice?: number) => {
     const apiBase = getApiBase();
     
     try {
@@ -176,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role,
           sport,
           name,
+          ...(basePrice !== undefined && { basePrice }),
         }),
       });
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface Player {
   id: string;
@@ -112,8 +113,8 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     return currentBid + getIncrement(currentBid);
   }, [currentBid, getIncrement]);
 
-  // Format currency (input in Crores)
-  const formatCr = (amountInCr: number) => `₹${amountInCr.toFixed(2)} CR`;
+  // Format currency (input in raw amount)
+  const formatCr = (amountInRaw: number) => `₹${formatPrice(amountInRaw)}`;
 
   // Check if we came from overview with a selected auction
   useEffect(() => {
@@ -332,7 +333,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     
     // Check if team can afford
     if (team.purseRemaining < newBidRaw) {
-      alert(`${team.name} cannot afford ₹${newBidCr.toFixed(2)} CR!`);
+      alert(`${team.name} cannot afford ₹${formatPrice(newBidRaw)}!`);
       return;
     }
 
@@ -385,7 +386,7 @@ export const AuctioneerLiveDashboard: React.FC = () => {
     
     const customAmountRaw = crToRaw(customAmountCr);
     if (team.purseRemaining < customAmountRaw) {
-      alert(`${team.name} cannot afford ₹${customAmountCr.toFixed(2)} CR!`);
+      alert(`${team.name} cannot afford ₹${formatPrice(customAmountRaw)}!`);
       return;
     }
 

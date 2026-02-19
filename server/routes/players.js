@@ -61,13 +61,27 @@ router.get('/:sport', async (req, res) => {
 // Add new player to a sport
 router.post('/:sport', async (req, res) => {
   try {
-    const { name, username, email, password } = req.body;
+    const { name, username, email, password, basePrice } = req.body;
     const sport = req.params.sport;
     
     // Validate required fields for login
     if (!name || !username || !email || !password) {
       return res.status(400).json({ 
         error: 'Name, username, email, and password are required for player creation' 
+      });
+    }
+
+    // Validate basePrice
+    if (basePrice === undefined || basePrice === null) {
+      return res.status(400).json({ 
+        error: 'Base price is required for player creation' 
+      });
+    }
+
+    const basePriceNum = Number(basePrice);
+    if (isNaN(basePriceNum) || basePriceNum <= 0) {
+      return res.status(400).json({ 
+        error: 'Base price must be a positive number' 
       });
     }
     
@@ -99,7 +113,7 @@ router.post('/:sport', async (req, res) => {
       name: name,
       sport: sport,
       role: 'all-rounder',
-      basePrice: 30000000,  // 30M raw = 3 CR (auction system format)
+      basePrice: basePriceNum,
       currentBid: 0,
       status: 'AVAILABLE',
       auctionPrice: null,

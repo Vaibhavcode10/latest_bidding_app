@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBiddingRequest } from '../../context/BiddingRequestContext';
 import { BiddingRequestStatus } from '../../types';
+import { formatPrice } from '../../utils/formatPrice';
 
 const AuctionRequests: React.FC = () => {
   const { requests, approveRequest, rejectRequest, addPlayerToAuction } = useBiddingRequest();
@@ -141,7 +142,7 @@ const AuctionRequests: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs mb-1">Base Price</p>
-                      <p className="text-blue-400 font-bold">₹{request.basePrice.toLocaleString()}</p>
+                      <p className="text-blue-400 font-bold">₹{formatPrice(request.basePrice)}</p>
                     </div>
                     <div>
                       <p className="text-slate-500 text-xs mb-1">Requested On</p>
@@ -185,7 +186,7 @@ const AuctionRequests: React.FC = () => {
               </div>
               <div>
                 <p className="text-slate-400 text-sm mb-1">Base Price</p>
-                <p className="text-blue-400 font-bold text-lg">₹{currentRequest.basePrice.toLocaleString()}</p>
+                <p className="text-blue-400 font-bold text-lg">₹{formatPrice(currentRequest.basePrice)}</p>
               </div>
             </div>
 

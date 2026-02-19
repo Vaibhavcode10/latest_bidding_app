@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface HistoryEntry {
   id: string;
@@ -200,7 +201,7 @@ export const History: React.FC = () => {
                         {entry.basePrice && (
                           <div>
                             <span className="text-gray-400 text-sm">Base Price:</span>
-                            <p className="text-white">${entry.basePrice.toLocaleString()}</p>
+                            <p className="text-white">₹{formatPrice(entry.basePrice)}</p>
                           </div>
                         )}
 

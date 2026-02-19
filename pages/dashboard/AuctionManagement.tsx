@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface Auction {
   id: string;
@@ -416,7 +417,7 @@ export const AuctionManagement: React.FC = () => {
                         {team.logoUrl && <img src={team.logoUrl} alt={team.name} className="w-12 h-12 rounded-lg object-cover" />}
                         <div className="flex-1">
                           <p className="text-green-800 dark:text-green-300 font-bold">{team.name}</p>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm">Purse: ₹{(team.purseRemaining / 10000000).toFixed(1)} Cr</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm">Purse: ₹{formatPrice(team.purseRemaining)}</p>
                         </div>
                       </div>
                     ))}

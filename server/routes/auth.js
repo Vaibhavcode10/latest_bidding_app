@@ -142,7 +142,7 @@ router.post('/login', async (req, res) => {
 // Register route - for new players and auctioneers
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password, role, sport, name } = req.body;
+    const { username, email, password, role, sport, name, basePrice } = req.body;
 
     if (!username || !password || !role) {
       return res.status(400).json({
@@ -177,6 +177,19 @@ router.post('/register', async (req, res) => {
     }
 
     if (role === 'player') {
+      // Validate basePrice if provided
+      let basePriceValue = 0;
+      if (basePrice !== undefined && basePrice !== null) {
+        const basePriceNum = Number(basePrice);
+        if (isNaN(basePriceNum) || basePriceNum <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Base price must be a positive number'
+          });
+        }
+        basePriceValue = basePriceNum;
+      }
+
       // Create new player
       const sportPrefix = sport.substring(0, 2).toLowerCase();
       const newPlayer = {
@@ -191,7 +204,7 @@ router.post('/register', async (req, res) => {
         height: 'Unavailable',
         weight: 'Unavailable',
         age: null,
-        basePrice: 0,
+        basePrice: basePriceValue,
         bio: 'Unavailable',
         imageUrl: '',
         verified: true,

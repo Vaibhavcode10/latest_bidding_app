@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface Player {
   id: string;
@@ -33,6 +34,7 @@ const Players: React.FC = () => {
     username: '',
     email: '',
     password: '',
+    basePrice: '',
   });
 
   // Use the user's selected sport instead of local state
@@ -66,7 +68,7 @@ const Players: React.FC = () => {
       // For creating new player, send all required auth fields
       await api.createEntity('players', formData, sport);
     }
-    setFormData({ name: '', username: '', email: '', password: '' });
+    setFormData({ name: '', username: '', email: '', password: '', basePrice: '' });
     setEditingId(null);
     setShowForm(false);
     fetchPlayers();
@@ -77,7 +79,8 @@ const Players: React.FC = () => {
       name: player.name, 
       username: '',  // Don't show existing auth data
       email: '',
-      password: ''
+      password: '',
+      basePrice: ''
     });
     setEditingId(player.id);
     setShowForm(true);
@@ -205,12 +208,27 @@ const Players: React.FC = () => {
                     required
                     minLength={6}
                   />
+                  <input
+                    type="number"
+                    placeholder="Base Price *"
+                    value={formData.basePrice}
+                    onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
+                    className="px-4 py-3 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    required
+                    step="1"
+                    min="0"
+                  />
                 </>
               )}
             </div>
             {!editingId && (
-              <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
-                <strong>📌 Note:</strong> The player will be able to log in with these credentials and can update their profile details after logging in.
+              <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <strong>📌 Note:</strong> The player will be able to log in with these credentials and can update their profile details after logging in.
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                  <strong>💰 Base Price:</strong> Enter the starting bid amount as a number (e.g., 2000000, 20000, etc). No units like CR or Lakh needed.
+                </div>
               </div>
             )}
             <button
@@ -264,7 +282,7 @@ const Players: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-slate-400 text-sm">Base Price</span>
                   <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                    {player.basePrice ? `₹${(player.basePrice / 10000000).toFixed(1)} CR` : '₹3 CR'}
+                    ₹{player.basePrice ? formatPrice(player.basePrice) : formatPrice(30000000)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

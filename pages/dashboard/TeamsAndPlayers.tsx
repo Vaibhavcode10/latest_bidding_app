@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../../components/ThemeToggle';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface Team {
   id: string;
@@ -53,6 +54,7 @@ const TeamsAndPlayers: React.FC = () => {
     username: '',
     email: '',
     password: '',
+    basePrice: '',
   });
 
   const sports = ['football', 'cricket', 'basketball', 'baseball', 'volleyball'];
@@ -132,7 +134,8 @@ const TeamsAndPlayers: React.FC = () => {
       name: player.name, 
       username: '',  // Don't show existing auth data
       email: '',
-      password: ''
+      password: '',
+      basePrice: ''
     });
     setEditingPlayerId(player.id);
     setShowPlayerForm(true);
@@ -162,7 +165,7 @@ const TeamsAndPlayers: React.FC = () => {
   };
 
   const resetPlayerForm = () => {
-    setPlayerFormData({ name: '', username: '', email: '', password: '' });
+    setPlayerFormData({ name: '', username: '', email: '', password: '', basePrice: '' });
     setEditingPlayerId(null);
     setShowPlayerForm(false);
   };
@@ -335,11 +338,11 @@ const TeamsAndPlayers: React.FC = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between">
                         <span className="text-gray-500 dark:text-gray-400 text-sm">Total Purse</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{(team.totalPurse / 10000000).toFixed(2)} Cr</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{formatPrice(team.totalPurse)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500 dark:text-gray-400 text-sm">Remaining</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">₹{(team.purseRemaining / 10000000).toFixed(2)} Cr</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">₹{formatPrice(team.purseRemaining)}</span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full" style={{ width: `${spentPercentage}%` }}></div>
@@ -447,14 +450,20 @@ const TeamsAndPlayers: React.FC = () => {
                         required
                         minLength={6}
                       />
+                      <input
+                        type="number"
+                        placeholder="Base Price *"
+                        value={playerFormData.basePrice}
+                        onChange={(e) => setPlayerFormData({ ...playerFormData, basePrice: e.target.value })}
+                        className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        required
+                        step="1"
+                        min="0"
+                      />
                     </>
                   )}
                 </div>
-                {!editingPlayerId && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <strong>📌 Note:</strong> The player will be able to log in with these credentials and can update their profile details after logging in.
-                  </div>
-                )}
+                
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -498,7 +507,7 @@ const TeamsAndPlayers: React.FC = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400 text-sm">Base Price</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{(player.basePrice / 10000000).toFixed(2)} Cr</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{formatPrice(player.basePrice)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500 dark:text-gray-400 text-sm">Status</span>

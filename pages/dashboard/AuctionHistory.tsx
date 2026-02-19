@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface AuctionHistoryItem {
   auctionId: string;
@@ -52,7 +53,7 @@ const AuctionHistory: React.FC<Props> = ({ userRole, userId, sport }) => {
 
   // Format currency values
   const formatCurrency = (amount: number) => {
-    return (amount / 10000000).toFixed(2) + ' CR'; // Convert from raw to crores
+    return `₹${formatPrice(amount)}`;
   };
 
   // Format duration

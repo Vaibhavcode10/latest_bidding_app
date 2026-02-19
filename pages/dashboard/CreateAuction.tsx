@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../../services/api';
+import { formatPrice } from '../../utils/formatPrice';
 
 interface Team {
   id: string;
@@ -336,7 +337,7 @@ export const CreateAuction: React.FC = () => {
                       {team.logoUrl && <img src={team.logoUrl} alt={team.name} className="w-7 h-7 rounded-full object-cover shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-xs text-gray-900 dark:text-white truncate">{team.name}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">₹{(team.purseRemaining / 10000000).toFixed(1)}Cr</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">₹{formatPrice(team.purseRemaining)}</p>
                       </div>
                       {formData.selectedTeams.includes(team.id) && <span className="text-green-500 text-sm">✓</span>}
                     </div>
@@ -391,7 +392,7 @@ export const CreateAuction: React.FC = () => {
                       </div>
                       <p className="font-semibold text-gray-900 dark:text-white text-xs truncate">{player.name}</p>
                       <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{player.role}</p>
-                      <p className="text-xs text-gray-500">₹{(player.basePrice / 10000000).toFixed(1)}Cr</p>
+                      <p className="text-xs text-gray-500">₹{formatPrice(player.basePrice)}</p>
                       {formData.selectedPlayers.includes(player.id) && <span className="text-orange-500 text-sm">✓</span>}
                     </div>
                   </div>
