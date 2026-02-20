@@ -24,8 +24,6 @@ const AuctioneerDashboardLayout: React.FC = () => {
 
   const navItems = [
     { name: 'Overview', path: '/auctioneer/dashboard', icon: '📊', end: true },
-    { name: 'Live Auction', path: '/auctioneer/live', icon: '🔴', isLive: true },
-    { name: 'Auction History', path: '/auctioneer/history', icon: '📜' },
   ];
 
   const handleLogout = () => {

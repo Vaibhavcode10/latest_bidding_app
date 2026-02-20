@@ -31,12 +31,27 @@ export const api = {
         }
       }
       
+      console.log('📤 [API GET]', { url });
+      
       const res = await fetch(url);
+      
+      console.log('📥 [API RESPONSE]', { url, status: res.status, contentType: res.headers.get('content-type') });
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('❌ [API ERROR] Non-JSON response:', { url, status: res.status, text: text.substring(0, 200) });
+        return { 
+          data: { success: false, error: `Server error: ${res.status}` } as T, 
+          status: res.status 
+        };
+      }
+      
       const data = await res.json();
       return { data, status: res.status };
     } catch (err) {
       console.error(`API Get Error (${path}):`, err);
-      return { data: {} as T, status: 500 };
+      return { data: { success: false, error: 'Failed to connect to server' } as T, status: 500 };
     }
   },
 
@@ -44,16 +59,31 @@ export const api = {
     try {
       const baseUrl = getApiBase();
       const url = `${baseUrl}${path}`;
+      console.log('📤 [API POST]', { url, body });
+      
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      
+      console.log('📥 [API RESPONSE]', { url, status: res.status, contentType: res.headers.get('content-type') });
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('❌ [API ERROR] Non-JSON response:', { url, status: res.status, text: text.substring(0, 200) });
+        return { 
+          data: { success: false, error: `Server error: ${res.status}` } as T, 
+          status: res.status 
+        };
+      }
+      
       const data = await res.json();
       return { data, status: res.status };
     } catch (err) {
       console.error(`API Post Error (${path}):`, err);
-      return { data: {} as T, status: 500 };
+      return { data: { success: false, error: 'Failed to connect to server' } as T, status: 500 };
     }
   },
 
@@ -61,16 +91,31 @@ export const api = {
     try {
       const baseUrl = getApiBase();
       const url = `${baseUrl}${path}`;
+      console.log('📤 [API PUT]', { url, body });
+      
       const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      
+      console.log('📥 [API RESPONSE]', { url, status: res.status, contentType: res.headers.get('content-type') });
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('❌ [API ERROR] Non-JSON response:', { url, status: res.status, text: text.substring(0, 200) });
+        return { 
+          data: { success: false, error: `Server error: ${res.status}` } as T, 
+          status: res.status 
+        };
+      }
+      
       const data = await res.json();
       return { data, status: res.status };
     } catch (err) {
       console.error(`API Put Error (${path}):`, err);
-      return { data: {} as T, status: 500 };
+      return { data: { success: false, error: 'Failed to connect to server' } as T, status: 500 };
     }
   },
 
@@ -93,12 +138,27 @@ export const api = {
         }
       }
       
+      console.log('📤 [API DELETE]', { url });
+      
       const res = await fetch(url, { method: 'DELETE' });
+      
+      console.log('📥 [API RESPONSE]', { url, status: res.status, contentType: res.headers.get('content-type') });
+      
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        console.error('❌ [API ERROR] Non-JSON response:', { url, status: res.status, text: text.substring(0, 200) });
+        return { 
+          data: { success: false, error: `Server error: ${res.status}` } as T, 
+          status: res.status 
+        };
+      }
+      
       const data = await res.json();
       return { data, status: res.status };
     } catch (err) {
       console.error(`API Delete Error (${path}):`, err);
-      return { data: {} as T, status: 500 };
+      return { data: { success: false, error: 'Failed to connect to server' } as T, status: 500 };
     }
   },
 
@@ -185,107 +245,229 @@ export const api = {
     }
   },
 
-  // ===== AUCTION HISTORY API =====
-  
-  // Get all auction history (admin/auctioneer only)
-  getAuctionHistory: async (userRole: string, userId: string, sport?: string, auctioneerId?: string) => {
+  // ===== SEASON API =====
+
+  // Create a new season
+  createSeason: async (seasonData: {
+    sport: string;
+    name: string;
+    year: number;
+    startDate: string;
+    endDate: string;
+    description?: string;
+    details?: Record<string, any>;
+    userRole: string;
+    userId: string;
+  }) => {
     try {
-      const params = new URLSearchParams({
-        userRole,
-        userId
+      const response = await api.post('/seasons', {
+        ...seasonData,
+        createdBy: seasonData.userId
       });
-      
-      if (sport) params.append('sport', sport);
-      if (auctioneerId) params.append('auctioneerId', auctioneerId);
-      
-      const response = await api.get(`/auction-history?${params.toString()}`);
       return response;
     } catch (err) {
-      console.error('Get auction history error:', err);
-      return { data: { success: false, history: [], total: 0 }, status: 500 };
+      console.error('Create season error:', err);
+      return { data: { success: false, error: 'Failed to create season' }, status: 500 };
     }
   },
 
-  // Get specific auction history details
-  getAuctionDetails: async (auctionId: string, userRole: string, userId: string) => {
+  // Get all seasons
+  getAllSeasons: async () => {
     try {
-      const params = new URLSearchParams({
-        userRole,
-        userId
-      });
-      
-      const response = await api.get(`/auction-history/${auctionId}?${params.toString()}`);
+      const response = await api.get('/seasons');
       return response;
     } catch (err) {
-      console.error('Get auction details error:', err);
-      return { data: { success: false, auction: null }, status: 500 };
+      console.error('Get all seasons error:', err);
+      return { data: { success: false, seasons: [], count: 0 }, status: 500 };
     }
   },
 
-  // Get all active auction ledgers
-  getActiveLedgers: async (userRole: string, userId: string) => {
+  // Get seasons by sport
+  getSeasonsBySport: async (sport: string) => {
     try {
-      const params = new URLSearchParams({
-        userRole,
-        userId
-      });
-      
-      const response = await api.get(`/auction-history/ledgers/active?${params.toString()}`);
+      const response = await api.get(`/seasons/sport/${sport}`);
       return response;
     } catch (err) {
-      console.error('Get active ledgers error:', err);
-      return { data: { success: false, ledgers: [], total: 0 }, status: 500 };
+      console.error(`Get seasons for ${sport} error:`, err);
+      return { data: { success: false, seasons: [], count: 0 }, status: 500 };
     }
   },
 
-  // Get specific auction ledger
-  getAuctionLedger: async (auctionId: string, userRole: string, userId: string) => {
+  // Get specific season
+  getSeasonById: async (seasonId: string) => {
     try {
-      const params = new URLSearchParams({
-        userRole,
-        userId
-      });
-      
-      const response = await api.get(`/auction-history/ledgers/${auctionId}?${params.toString()}`);
+      const response = await api.get(`/seasons/${seasonId}`);
       return response;
     } catch (err) {
-      console.error('Get auction ledger error:', err);
-      return { data: { success: false, ledger: null }, status: 500 };
+      console.error('Get season error:', err);
+      return { data: { success: false, season: null }, status: 500 };
     }
   },
 
-  // Get auction statistics
-  getAuctionStats: async (userRole: string, userId: string, sport?: string, auctioneerId?: string) => {
+  // Update season
+  updateSeason: async (seasonId: string, updates: {
+    name?: string;
+    year?: number;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    details?: Record<string, any>;
+    userRole: string;
+  }) => {
     try {
-      const params = new URLSearchParams({
-        userRole,
-        userId
-      });
-      
-      if (sport) params.append('sport', sport);
-      if (auctioneerId) params.append('auctioneerId', auctioneerId);
-      
-      const response = await api.get(`/auction-history/stats?${params.toString()}`);
+      const response = await api.put(`/seasons/${seasonId}`, updates);
       return response;
     } catch (err) {
-      console.error('Get auction stats error:', err);
-      return { data: { success: false, stats: null }, status: 500 };
+      console.error('Update season error:', err);
+      return { data: { success: false, error: 'Failed to update season' }, status: 500 };
     }
   },
 
-  // ===== LIVE AUCTION API =====
-  
-  // Undo last bid
-  undoLastBid: async (userRole: string, userId: string) => {
+  // Delete season
+  deleteSeason: async (seasonId: string, userRole: string, userId: string) => {
     try {
-      const response = await api.post('/live-auction/undo-bid', {
-        userRole,
-        userId
+      const response = await api.delete(`/seasons/${seasonId}`, {
+        params: { userRole, userId }
       });
       return response;
     } catch (err) {
-      console.error('Undo bid error:', err);
-      return { data: { success: false, error: 'Failed to undo bid' }, status: 500 };
+      console.error('Delete season error:', err);
+      return { data: { success: false, error: 'Failed to delete season' }, status: 500 };
+    }
+  },
+
+  // Add action/auction to season
+  addActionToSeason: async (seasonId: string, actionId: string, userRole: string) => {
+    try {
+      const response = await api.post(`/seasons/${seasonId}/actions/${actionId}`, {
+        userRole
+      });
+      return response;
+    } catch (err) {
+      console.error('Add action to season error:', err);
+      return { data: { success: false, error: 'Failed to add action to season' }, status: 500 };
+    }
+  },
+
+  // Remove action/auction from season
+  removeActionFromSeason: async (seasonId: string, actionId: string, userRole: string, userId: string) => {
+    try {
+      const response = await api.delete(`/seasons/${seasonId}/actions/${actionId}`, {
+        params: { userRole, userId }
+      });
+      return response;
+    } catch (err) {
+      console.error('Remove action from season error:', err);
+      return { data: { success: false, error: 'Failed to remove action from season' }, status: 500 };
+    }
+  },
+
+  // ===== ACTION/AUCTION API =====
+
+  // Create a new action
+  createAction: async (actionData: {
+    seasonId: string;
+    sport: string;
+    name: string;
+    description?: string;
+    participatingTeams: Array<any>;
+    playerPool: string[];
+    assignedAuctioneerId: string;
+    assignedAuctioneerName: string;
+    settings?: Record<string, any>;
+    userRole: string;
+    userId: string;
+  }) => {
+    try {
+      const response = await api.post('/actions', {
+        ...actionData,
+        createdBy: actionData.userId
+      });
+      return response;
+    } catch (err) {
+      console.error('Create action error:', err);
+      return { data: { success: false, error: 'Failed to create action' }, status: 500 };
+    }
+  },
+
+  // Get action by ID
+  getActionById: async (actionId: string) => {
+    try {
+      const response = await api.get(`/actions/${actionId}`);
+      return response;
+    } catch (err) {
+      console.error('Get action error:', err);
+      return { data: { success: false, action: null }, status: 500 };
+    }
+  },
+
+  // Get actions by season
+  getActionsBySeasonId: async (seasonId: string) => {
+    try {
+      const response = await api.get(`/actions/season/${seasonId}`);
+      return response;
+    } catch (err) {
+      console.error('Get actions by season error:', err);
+      return { data: { success: false, actions: [], count: 0 }, status: 500 };
+    }
+  },
+
+  // Get actions by sport
+  getActionsBySport: async (sport: string) => {
+    try {
+      const response = await api.get(`/actions/sport/${sport}`);
+      return response;
+    } catch (err) {
+      console.error('Get actions by sport error:', err);
+      return { data: { success: false, actions: [], count: 0 }, status: 500 };
+    }
+  },
+
+  // Get all data needed to create an action (teams, players, auctioneers)
+  getActionCreationData: async (sport: string) => {
+    try {
+      const response = await api.get(`/actions/${sport}/data`);
+      return response;
+    } catch (err) {
+      console.error('Get action creation data error:', err);
+      return { 
+        data: { 
+          success: false, 
+          data: { teams: [], players: [], auctioneers: [] } 
+        }, 
+        status: 500 
+      };
+    }
+  },
+
+  // Update action
+  updateAction: async (actionId: string, updates: {
+    name?: string;
+    description?: string;
+    status?: string;
+    settings?: Record<string, any>;
+    userRole: string;
+  }) => {
+    try {
+      const response = await api.put(`/actions/${actionId}`, updates);
+      return response;
+    } catch (err) {
+      console.error('Update action error:', err);
+      return { data: { success: false, error: 'Failed to update action' }, status: 500 };
+    }
+  },
+
+  // Delete action
+  deleteAction: async (actionId: string, userRole: string, userId: string) => {
+    try {
+      const response = await api.delete(`/actions/${actionId}`, {
+        params: { userRole, userId }
+      });
+      return response;
+    } catch (err) {
+      console.error('Delete action error:', err);
+      return { data: { success: false, error: 'Failed to delete action' }, status: 500 };
     }
   }
+
 };

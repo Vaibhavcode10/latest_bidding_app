@@ -153,6 +153,22 @@ export interface AuctionSession {
   teamIds: string[];
 }
 
+// Season interface - represents a tournament/season with its associated actions
+export interface Season {
+  id: string;
+  sport: string;
+  name: string;
+  year: number;
+  startDate: string;        // ISO date string
+  endDate: string;          // ISO date string
+  description?: string;
+  details?: Record<string, any>;  // Additional season metadata
+  actionIds: string[];      // Array of auction/action IDs
+  createdBy: string;        // Admin user ID who created the season
+  createdAt: string;        // ISO timestamp
+  updatedAt: string;        // ISO timestamp
+}
+
 export type EntityType = 'players' | 'teams' | 'auction';
 
 export enum BiddingRequestStatus {

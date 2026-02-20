@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { formatPrice } from '../../utils/formatPrice';
 
 interface Player {
   id: string;
@@ -282,7 +281,7 @@ const Players: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-slate-400 text-sm">Base Price</span>
                   <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                    ₹{player.basePrice ? formatPrice(player.basePrice) : formatPrice(30000000)}
+                    {player.basePrice ? `₹${(player.basePrice / 10000000).toFixed(1)} CR` : '₹3 CR'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

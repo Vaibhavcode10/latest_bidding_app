@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useBiddingRequest } from '../../context/BiddingRequestContext';
-import { BiddingRequestStatus } from '../../types';
 import { formatPrice } from '../../utils/formatPrice';
 
 interface ProfileData {
@@ -19,9 +17,7 @@ interface ProfileData {
 
 const PlayerProfilePage: React.FC = () => {
   const { user, updateProfile, refreshProfile } = useAuth();
-  const { addRequest, getPlayerRequest } = useBiddingRequest();
   const [isEditing, setIsEditing] = useState(false);
-  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -50,9 +46,6 @@ const PlayerProfilePage: React.FC = () => {
   useEffect(() => {
     refreshProfile();
   }, []);
-
-  const playerRequest = user?.id ? getPlayerRequest(user.id) : undefined;
-  const hasActiveRequest = playerRequest && playerRequest.status !== BiddingRequestStatus.REJECTED;
 
   const isNewUser = !user?.name || user?.name === 'Unavailable';
 
@@ -102,20 +95,6 @@ const PlayerProfilePage: React.FC = () => {
   const handleCancel = () => {
     setFormData(getInitialFormData());
     setIsEditing(false);
-  };
-
-  const handleRequestBid = () => {
-    if (!user) return;
-    
-    addRequest({
-      playerId: user.id,
-      playerName: formData.name,
-      sport: formData.sport,
-      role: formData.role,
-      basePrice: formData.basePrice,
-      status: BiddingRequestStatus.PENDING,
-    });
-    setRequestSubmitted(true);
   };
 
   // Get roles based on sport
@@ -356,75 +335,6 @@ const PlayerProfilePage: React.FC = () => {
 
         {/* Stats */}
         <div className="space-y-6">
-          {/* Bidding Request Status */}
-          {playerRequest && (
-            <div className={`rounded-2xl p-6 backdrop-blur-xl border ${
-              playerRequest.status === BiddingRequestStatus.PENDING
-                ? 'bg-yellow-50 dark:bg-yellow-600/10 border-yellow-300 dark:border-yellow-600/20'
-                : playerRequest.status === BiddingRequestStatus.APPROVED
-                ? 'bg-green-50 dark:bg-green-600/10 border-green-300 dark:border-green-600/20'
-                : playerRequest.status === BiddingRequestStatus.ADDED_TO_AUCTION
-                ? 'bg-blue-50 dark:bg-blue-600/10 border-blue-300 dark:border-blue-600/20'
-                : 'bg-red-50 dark:bg-red-600/10 border-red-300 dark:border-red-600/20'
-            }`}>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Bidding Request Status</h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Status</p>
-                  <p className={`font-semibold text-lg ${
-                    playerRequest.status === BiddingRequestStatus.PENDING
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : playerRequest.status === BiddingRequestStatus.APPROVED
-                      ? 'text-green-600 dark:text-green-400'
-                      : playerRequest.status === BiddingRequestStatus.ADDED_TO_AUCTION
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {playerRequest.status === BiddingRequestStatus.PENDING && '⏳ Pending Review'}
-                    {playerRequest.status === BiddingRequestStatus.APPROVED && '✓ Approved by Admin'}
-                    {playerRequest.status === BiddingRequestStatus.ADDED_TO_AUCTION && '🎯 Added to Auction'}
-                    {playerRequest.status === BiddingRequestStatus.REJECTED && '✗ Rejected'}
-                  </p>
-                </div>
-                {playerRequest.approvedAt && (
-                  <div>
-                    <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Approved on</p>
-                    <p className="text-gray-800 dark:text-white font-semibold">{new Date(playerRequest.approvedAt).toLocaleDateString()}</p>
-                  </div>
-                )}
-                {playerRequest.rejectionReason && (
-                  <div>
-                    <p className="text-gray-500 dark:text-slate-400 text-sm mb-1">Rejection Reason</p>
-                    <p className="text-red-600 dark:text-red-300 font-semibold">{playerRequest.rejectionReason}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {!hasActiveRequest && !requestSubmitted && !isNewUser && formData.basePrice > 0 && (
-            <button
-              onClick={handleRequestBid}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-purple-900/30 hover:shadow-purple-600/20 active:scale-[0.98]"
-            >
-              🚀 Request to Join Auction
-            </button>
-          )}
-
-          {isNewUser && (
-            <div className="bg-orange-50 dark:bg-orange-600/10 border border-orange-300 dark:border-orange-600/20 rounded-2xl p-6 backdrop-blur-xl">
-              <p className="text-orange-600 dark:text-orange-300 font-semibold">⚠️ Complete your profile first</p>
-              <p className="text-gray-500 dark:text-slate-400 text-sm mt-2">You need to fill in your profile details before requesting to join an auction.</p>
-            </div>
-          )}
-
-          {requestSubmitted && !playerRequest && (
-            <div className="bg-green-50 dark:bg-green-600/10 border border-green-300 dark:border-green-600/20 rounded-2xl p-6 backdrop-blur-xl">
-              <p className="text-green-600 dark:text-green-300 font-semibold">✓ Your request has been sent to the admin!</p>
-              <p className="text-gray-500 dark:text-slate-400 text-sm mt-2">You'll be notified once the admin reviews your profile.</p>
-            </div>
-          )}
-
           <div className="bg-white dark:bg-gradient-to-r dark:from-blue-600/10 dark:to-purple-600/10 border border-gray-200 dark:border-blue-600/20 rounded-2xl p-6 backdrop-blur-xl shadow-sm dark:shadow-none">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Profile Stats</h3>
             <div className="space-y-4">

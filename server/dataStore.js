@@ -2,18 +2,17 @@ import { db } from './firebase.js';
 import admin from 'firebase-admin';
 
 // Collection names following the new naming convention
-export const COLLECTIONS = {
+const COLLECTIONS = {
   USERS: 'sportbid_users',
   PLAYERS: 'sportbid_players',
   FRANCHISES: 'sportbid_franchises',
   AUCTIONS: 'sportbid_auctions',
+  ACTIONS: 'sportbid_actions',
   LIVE_SESSIONS: 'sportbid_live_sessions',
   BIDS: 'sportbid_bids',
-  HISTORY: 'sportbid_history'
+  HISTORY: 'sportbid_history',
+  SEASONS: 'sportbid_seasons'
 };
-
-// Export db for transaction usage
-export { db };
 
 // Firestore transaction helper for atomic operations
 export const runTransaction = async (operation) => {
@@ -408,80 +407,6 @@ export const getHistoryByAuctioneer = async (auctioneerId, limit = 100) => {
   }
 };
 
-// Auction operations
-export const createAuction = async (auction) => {
-  try {
-    const docRef = await db.collection(COLLECTIONS.AUCTIONS).add({
-      ...auction,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-    return { id: docRef.id, ...auction };
-  } catch (error) {
-    console.error('Error creating auction:', error);
-    throw error;
-  }
-};
-
-export const getAuctionsBySport = async (sport) => {
-  try {
-    const snapshot = await db.collection(COLLECTIONS.AUCTIONS)
-      .where('sport', '==', sport)
-      .get();
-    
-    // Sort in memory instead of using Firestore orderBy to avoid index requirement
-    const auctions = snapshotToArray(snapshot);
-    auctions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    return auctions;
-  } catch (error) {
-    console.error('Error getting auctions by sport:', error);
-    throw error;
-  }
-};
-
-export const getAuctionById = async (id) => {
-  try {
-    const doc = await db.collection(COLLECTIONS.AUCTIONS).doc(id).get();
-    return docToObject(doc);
-  } catch (error) {
-    console.error('Error getting auction by ID:', error);
-    throw error;
-  }
-};
-
-export const updateAuction = async (id, updates) => {
-  try {
-    await db.collection(COLLECTIONS.AUCTIONS).doc(id).update({
-      ...updates,
-      updatedAt: new Date().toISOString()
-    });
-    
-    const updatedDoc = await db.collection(COLLECTIONS.AUCTIONS).doc(id).get();
-    return docToObject(updatedDoc);
-  } catch (error) {
-    console.error('Error updating auction:', error);
-    throw error;
-  }
-};
-
-export const deleteAuction = async (id) => {
-  try {
-    const doc = await db.collection(COLLECTIONS.AUCTIONS).doc(id).get();
-    const auction = docToObject(doc);
-    
-    if (!auction) {
-      throw new Error('Auction not found');
-    }
-    
-    await db.collection(COLLECTIONS.AUCTIONS).doc(id).delete();
-    return auction;
-  } catch (error) {
-    console.error('Error deleting auction:', error);
-    throw error;
-  }
-};
-
 // Live session operations
 export const createLiveSession = async (session) => {
   try {
@@ -683,6 +608,356 @@ export const readCollection = async (collectionName) => {
     return snapshotToArray(snapshot);
   } catch (error) {
     console.error('Error reading collection:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// SEASON OPERATIONS
+// ============================================
+
+export const createSeason = async (season) => {
+  try {
+    console.log('📝 [FIRESTORE] Creating season with data:', {
+      name: season.name,
+      sport: season.sport,
+      year: season.year,
+      fullObject: season
+    });
+
+    const seasonData = {
+      name: season.name || '',
+      sport: season.sport || '',
+      year: season.year || new Date().getFullYear(),
+      startDate: season.startDate || '',
+      endDate: season.endDate || '',
+      description: season.description || '',
+      details: season.details || {},
+      actionIds: season.actionIds || [],
+      createdBy: season.createdBy || 'system',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    console.log('📤 [FIRESTORE] Clean season data to send:', seasonData);
+
+    const docRef = await db.collection(COLLECTIONS.SEASONS).add(seasonData);
+
+    const result = { id: docRef.id, ...seasonData };
+    console.log('✅ [FIRESTORE] Season created successfully with ID:', docRef.id);
+
+    return result;
+  } catch (error) {
+    console.error('Error creating season:', error);
+    throw error;
+  }
+};
+
+export const getSeasonById = async (id) => {
+  try {
+    const doc = await db.collection(COLLECTIONS.SEASONS).doc(id).get();
+    return docToObject(doc);
+  } catch (error) {
+    console.error('Error getting season by ID:', error);
+    throw error;
+  }
+};
+
+export const getSeasonsBySport = async (sport) => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.SEASONS)
+      .where('sport', '==', sport)
+      .orderBy('year', 'desc')
+      .get();
+    
+    const seasons = snapshotToArray(snapshot);
+    console.log(`✅ [FIRESTORE] Found ${seasons.length} seasons for sport: ${sport}`);
+    return seasons;
+  } catch (error) {
+    console.error('Error getting seasons by sport:', error);
+    throw error;
+  }
+};
+
+export const getAllSeasons = async () => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.SEASONS)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const seasons = snapshotToArray(snapshot);
+    console.log(`✅ [FIRESTORE] Retrieved ${seasons.length} total seasons`);
+    return seasons;
+  } catch (error) {
+    console.error('Error getting all seasons:', error);
+    throw error;
+  }
+};
+
+export const updateSeason = async (id, updates) => {
+  try {
+    console.log(`🔄 [FIRESTORE] Updating season ${id} with:`, updates);
+    
+    await db.collection(COLLECTIONS.SEASONS).doc(id).update({
+      ...updates,
+      updatedAt: new Date().toISOString()
+    });
+
+    const updatedDoc = await db.collection(COLLECTIONS.SEASONS).doc(id).get();
+    const result = docToObject(updatedDoc);
+    console.log(`✅ [FIRESTORE] Season ${id} updated successfully`);
+    return result;
+  } catch (error) {
+    console.error('Error updating season:', error);
+    throw error;
+  }
+};
+
+export const deleteSeason = async (id) => {
+  try {
+    const doc = await db.collection(COLLECTIONS.SEASONS).doc(id).get();
+    const season = docToObject(doc);
+
+    if (!season) {
+      throw new Error('Season not found');
+    }
+
+    await db.collection(COLLECTIONS.SEASONS).doc(id).delete();
+    console.log(`✅ [FIRESTORE] Season ${id} deleted successfully`);
+    return season;
+  } catch (error) {
+    console.error('Error deleting season:', error);
+    throw error;
+  }
+};
+
+export const addActionToSeason = async (seasonId, actionId) => {
+  try {
+    const seasonRef = db.collection(COLLECTIONS.SEASONS).doc(seasonId);
+    const seasonDoc = await seasonRef.get();
+
+    if (!seasonDoc.exists) {
+      throw new Error('Season not found');
+    }
+
+    const season = seasonDoc.data();
+    const actionIds = season.actionIds || [];
+
+    // Check if action already exists
+    if (actionIds.includes(actionId)) {
+      console.log(`⚠️ Action ${actionId} already exists in season ${seasonId}`);
+      return { id: seasonId, ...season };
+    }
+
+    // Add action to season
+    const updatedActionIds = [...actionIds, actionId];
+    await seasonRef.update({
+      actionIds: updatedActionIds,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log(`✅ [FIRESTORE] Action ${actionId} added to season ${seasonId}`);
+
+    const updatedDoc = await seasonRef.get();
+    return { id: updatedDoc.id, ...updatedDoc.data() };
+  } catch (error) {
+    console.error('Error adding action to season:', error);
+    throw error;
+  }
+};
+
+export const removeActionFromSeason = async (seasonId, actionId) => {
+  try {
+    const seasonRef = db.collection(COLLECTIONS.SEASONS).doc(seasonId);
+    const seasonDoc = await seasonRef.get();
+
+    if (!seasonDoc.exists) {
+      throw new Error('Season not found');
+    }
+
+    const season = seasonDoc.data();
+    const actionIds = season.actionIds || [];
+
+    // Remove action from season
+    const updatedActionIds = actionIds.filter(id => id !== actionId);
+
+    await seasonRef.update({
+      actionIds: updatedActionIds,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log(`✅ [FIRESTORE] Action ${actionId} removed from season ${seasonId}`);
+
+    const updatedDoc = await seasonRef.get();
+    return { id: updatedDoc.id, ...updatedDoc.data() };
+  } catch (error) {
+    console.error('Error removing action from season:', error);
+    throw error;
+  }
+};
+
+// ============================================
+// ACTION/AUCTION OPERATIONS
+// ============================================
+
+export const createAction = async (action) => {
+  try {
+    console.log('📝 [FIRESTORE] Creating action with data:', {
+      name: action.name,
+      sport: action.sport,
+      seasonId: action.seasonId,
+      fullObject: action
+    });
+
+    const actionData = {
+      seasonId: action.seasonId || '',
+      sport: action.sport || '',
+      name: action.name || '',
+      description: action.description || '',
+      participatingTeams: action.participatingTeams || [],
+      playerPool: action.playerPool || [],
+      completedPlayerIds: action.completedPlayerIds || [],
+      assignedAuctioneer: action.assignedAuctioneer || null,
+      status: action.status || 'CREATED',
+      settings: action.settings || {},
+      createdBy: action.createdBy || 'system',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    console.log('📤 [FIRESTORE] Clean action data to send:', actionData);
+
+    const docRef = await db.collection(COLLECTIONS.ACTIONS).add(actionData);
+
+    const result = { id: docRef.id, ...actionData };
+    console.log('✅ [FIRESTORE] Action created successfully with ID:', docRef.id);
+
+    return result;
+  } catch (error) {
+    console.error('Error creating action:', error);
+    throw error;
+  }
+};
+
+export const getActionById = async (id) => {
+  try {
+    const doc = await db.collection(COLLECTIONS.ACTIONS).doc(id).get();
+    return docToObject(doc);
+  } catch (error) {
+    console.error('Error getting action by ID:', error);
+    throw error;
+  }
+};
+
+export const getActionsBySeasonId = async (seasonId) => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.ACTIONS)
+      .where('seasonId', '==', seasonId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const actions = snapshotToArray(snapshot);
+    console.log(`✅ [FIRESTORE] Found ${actions.length} actions for season: ${seasonId}`);
+    return actions;
+  } catch (error) {
+    console.error('Error getting actions by season:', error);
+    throw error;
+  }
+};
+
+export const getActionsBySport = async (sport) => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.ACTIONS)
+      .where('sport', '==', sport)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const actions = snapshotToArray(snapshot);
+    console.log(`✅ [FIRESTORE] Found ${actions.length} actions for sport: ${sport}`);
+    return actions;
+  } catch (error) {
+    console.error('Error getting actions by sport:', error);
+    throw error;
+  }
+};
+
+export const updateAction = async (id, updates) => {
+  try {
+    console.log(`🔄 [FIRESTORE] Updating action ${id} with:`, updates);
+
+    await db.collection(COLLECTIONS.ACTIONS).doc(id).update({
+      ...updates,
+      updatedAt: new Date().toISOString()
+    });
+
+    const updatedDoc = await db.collection(COLLECTIONS.ACTIONS).doc(id).get();
+    const result = docToObject(updatedDoc);
+    console.log(`✅ [FIRESTORE] Action ${id} updated successfully`);
+    return result;
+  } catch (error) {
+    console.error('Error updating action:', error);
+    throw error;
+  }
+};
+
+export const deleteAction = async (id) => {
+  try {
+    const doc = await db.collection(COLLECTIONS.ACTIONS).doc(id).get();
+    const action = docToObject(doc);
+
+    if (!action) {
+      throw new Error('Action not found');
+    }
+
+    await db.collection(COLLECTIONS.ACTIONS).doc(id).delete();
+    console.log(`✅ [FIRESTORE] Action ${id} deleted successfully`);
+    return action;
+  } catch (error) {
+    console.error('Error deleting action:', error);
+    throw error;
+  }
+};
+
+export const getTeamsBySport = async (sport) => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.FRANCHISES)
+      .where('sport', '==', sport)
+      .get();
+
+    const teams = snapshotToArray(snapshot);
+    console.log(`✅ [FIRESTORE] Found ${teams.length} teams for sport: ${sport}`);
+    return teams;
+  } catch (error) {
+    console.error(`Error getting teams for sport ${sport}:`, error);
+    throw error;
+  }
+};
+
+export const getAuctioneersBySport = async (sport) => {
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.USERS)
+      .where('role', '==', 'auctioneer')
+      .where('sport', '==', sport)
+      .get();
+
+    const auctioneers = snapshotToArray(snapshot).map(auctioneer => ({
+      id: auctioneer.id,
+      username: auctioneer.username,
+      name: auctioneer.name,
+      email: auctioneer.email,
+      sport: auctioneer.sport
+    }));
+
+    console.log(`✅ [FIRESTORE] Found ${auctioneers.length} auctioneers for sport: ${sport}`);
+    return auctioneers;
+  } catch (error) {
+    console.error(`Error getting auctioneers for sport ${sport}:`, error);
     throw error;
   }
 };

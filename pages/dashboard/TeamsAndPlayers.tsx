@@ -338,11 +338,11 @@ const TeamsAndPlayers: React.FC = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between">
                         <span className="text-gray-500 dark:text-gray-400 text-sm">Total Purse</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{formatPrice(team.totalPurse)}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">₹{(team.totalPurse / 10000000).toFixed(2)} Cr</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500 dark:text-gray-400 text-sm">Remaining</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">₹{formatPrice(team.purseRemaining)}</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">₹{(team.purseRemaining / 10000000).toFixed(2)} Cr</span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full" style={{ width: `${spentPercentage}%` }}></div>
